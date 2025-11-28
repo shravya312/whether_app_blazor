@@ -1,4 +1,5 @@
 @using WeatherApp.Models
+@using System.Linq
 @inject WeatherService WeatherService
 
 <div class="weather-container">
@@ -9,6 +10,17 @@
             <input @bind="searchCity" @bind:event="oninput" class="form-control" placeholder="Enter city name" />
             <button @onclick="SearchWeather" class="btn btn-primary">Get Weather</button>
         </div>
+    </div>
+
+    <div class="dropdown-section mb-4">
+        <label class="form-label">Quick pick a popular city</label>
+        <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
+        <select class="form-select city-select" size="5" @onchange="OnCitySelected">
+            @foreach (var city in FilteredCities)
+            {
+                <option value="@city">@city</option>
+            }
+        </select>
     </div>
 
     @if (isLoading)
@@ -55,6 +67,17 @@
         display: flex;
         gap: 10px;
     }
+
+    .dropdown-section {
+        background: #ffffff;
+        border: 1px solid #e2e6ea;
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .city-select {
+        height: auto;
+    }
 </style>
 
 @code {
@@ -62,6 +85,19 @@
     private string searchCity = "";
     private bool isLoading = false;
     private string? errorMessage;
+    private string cityFilter = "";
+    private readonly List<string> popularCities = new()
+    {
+        "New York",
+        "London",
+        "Tokyo",
+        "Bangalore",
+        "Sydney"
+    };
+    private IEnumerable<string> FilteredCities =>
+        popularCities.Where(city =>
+            string.IsNullOrWhiteSpace(cityFilter) ||
+            city.Contains(cityFilter, StringComparison.OrdinalIgnoreCase));
 
     private async Task SearchWeather()
     {
@@ -88,6 +124,16 @@
             isLoading = false;
             StateHasChanged();
         }
+    }
+
+    private Task OnCitySelected(ChangeEventArgs args)
+    {
+        var selected = args.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            searchCity = selected;
+        }
+        return Task.CompletedTask;
     }
 }
 
