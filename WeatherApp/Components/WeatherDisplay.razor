@@ -86,7 +86,7 @@
     private bool isLoading = false;
     private string? errorMessage;
     private string cityFilter = "";
-    private readonly List<string> popularCities = new()
+    private readonly List<string> defaultPopularCities = new()
     {
         "New York",
         "London",
@@ -94,10 +94,16 @@
         "Bangalore",
         "Sydney"
     };
+    private List<string> popularCities = new();
     private IEnumerable<string> FilteredCities =>
         popularCities.Where(city =>
             string.IsNullOrWhiteSpace(cityFilter) ||
             city.Contains(cityFilter, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPopularCitiesAsync();
+    }
 
     private async Task SearchWeather()
     {
@@ -113,6 +119,10 @@
             if (currentWeather == null)
             {
                 errorMessage = "Weather data not found for the specified city.";
+            }
+            else
+            {
+                await LoadPopularCitiesAsync();
             }
         }
         catch (Exception ex)
@@ -134,6 +144,30 @@
             searchCity = selected;
         }
         return Task.CompletedTask;
+    }
+
+    private async Task LoadPopularCitiesAsync()
+    {
+        try
+        {
+            var cities = await WeatherService.GetPopularCitiesAsync();
+            if (cities != null && cities.Any())
+            {
+                popularCities = cities;
+            }
+            else if (!popularCities.Any())
+            {
+                popularCities = new List<string>(defaultPopularCities);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading popular cities: {ex.Message}");
+            if (!popularCities.Any())
+            {
+                popularCities = new List<string>(defaultPopularCities);
+            }
+        }
     }
 }
 

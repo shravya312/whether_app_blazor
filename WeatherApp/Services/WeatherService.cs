@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 using WeatherApp.Models;
 
@@ -23,9 +26,10 @@ namespace WeatherApp.Services
                 // Using OpenWeatherMap API (you'll need to get a free API key)
                 var apiKey = _configuration["WeatherApi:Key"];
                 var trimmedCity = city.Trim();
+                var normalizedCity = NormalizeCityName(trimmedCity);
                 var location = string.IsNullOrWhiteSpace(country)
-                    ? trimmedCity
-                    : $"{trimmedCity},{country.Trim()}";
+                    ? normalizedCity
+                    : $"{normalizedCity},{country.Trim()}";
                 var encodedLocation = Uri.EscapeDataString(location);
                 var url = $"https://api.openweathermap.org/data/2.5/weather?q={encodedLocation}&appid={apiKey}&units=metric";
                 
@@ -38,7 +42,7 @@ namespace WeatherApp.Services
                     
                     var weatherData = new WeatherData
                     {
-                        City = city,
+                        City = normalizedCity,
                         Country = country,
                         Temperature = document.RootElement.GetProperty("main").GetProperty("temp").GetDouble(),
                         Humidity = document.RootElement.GetProperty("main").GetProperty("humidity").GetDouble(),
@@ -49,6 +53,7 @@ namespace WeatherApp.Services
 
                     // Save to MongoDB
                     await _mongoDbService.SaveWeatherDataAsync(weatherData);
+                    await _mongoDbService.IncrementCitySearchAsync(normalizedCity);
                     
                     return weatherData;
                 }
@@ -59,6 +64,36 @@ namespace WeatherApp.Services
             }
             
             return null;
+        }
+
+        public async Task<List<string>> GetPopularCitiesAsync(int limit = 5)
+        {
+            var stats = await _mongoDbService.GetTopCitySearchesAsync(limit * 2);
+            var ordered = stats
+                .GroupBy(s => s.City, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g
+                    .OrderByDescending(x => x.Count)
+                    .ThenByDescending(x => x.LastSearched)
+                    .First())
+                .OrderByDescending(x => x.Count)
+                .ThenByDescending(x => x.LastSearched)
+                .Take(limit)
+                .Select(x => x.City)
+                .ToList();
+
+            return ordered;
+        }
+
+        private static string NormalizeCityName(string city)
+        {
+            var trimmed = city.Trim();
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                return trimmed;
+            }
+
+            var lower = trimmed.ToLowerInvariant();
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(lower);
         }
     }
 }
