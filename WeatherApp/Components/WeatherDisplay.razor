@@ -1,0 +1,93 @@
+@using WeatherApp.Models
+@inject WeatherService WeatherService
+
+<div class="weather-container">
+    <h3>Weather Information</h3>
+    
+    <div class="search-section mb-4">
+        <div class="input-group">
+            <input @bind="searchCity" @bind:event="oninput" class="form-control" placeholder="Enter city name" />
+            <button @onclick="SearchWeather" class="btn btn-primary">Get Weather</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Loading weather data...</div>
+    }
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (currentWeather != null)
+    {
+        <div class="weather-card">
+            <h4>@currentWeather.City, @currentWeather.Country</h4>
+            <div class="weather-details">
+                <p><strong>Temperature:</strong> @currentWeather.Temperature.ToString("F1")°C</p>
+                <p><strong>Humidity:</strong> @currentWeather.Humidity.ToString("F1")%</p>
+                <p><strong>Description:</strong> @currentWeather.Description</p>
+                <p><strong>Wind Speed:</strong> @currentWeather.WindSpeed.ToString("F1") m/s</p>
+                <p><strong>Last Updated:</strong> @currentWeather.Timestamp.ToLocalTime().ToString("g")</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .weather-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .weather-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .search-section {
+        display: flex;
+        gap: 10px;
+    }
+</style>
+
+@code {
+    private WeatherData? currentWeather;
+    private string searchCity = "";
+    private bool isLoading = false;
+    private string? errorMessage;
+
+    private async Task SearchWeather()
+    {
+        if (string.IsNullOrWhiteSpace(searchCity))
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+        
+        try
+        {
+            currentWeather = await WeatherService.GetWeatherAsync(searchCity);
+            if (currentWeather == null)
+            {
+                errorMessage = "Weather data not found for the specified city.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error fetching weather data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
+

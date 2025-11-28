@@ -1,0 +1,31 @@
+# Build results
+bin/
+obj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Logs
+*.log
+
+# Generated files
+*.g.cs
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.*proj.FileListAbsolute.txt
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Tooling
+.idea/
+.ionide/
+
+
