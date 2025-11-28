@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using WeatherApp.Services;
 using WeatherApp.Models;
 using Supabase;
+using SupabaseClient = Supabase.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpClient();
+builder.Services.AddAuthorizationCore();
 
 // MongoDB Configuration
 builder.Services.Configure<MongoDbSettings>(
@@ -24,13 +27,16 @@ var supabaseKey = builder.Configuration["Supabase:Key"];
 
 if (!string.IsNullOrEmpty(supabaseUrl) && !string.IsNullOrEmpty(supabaseKey))
 {
-    builder.Services.AddScoped<Supabase.Client>(provider => 
-        new Supabase.Client(supabaseUrl, supabaseKey, new Supabase.SupabaseOptions
+    builder.Services.AddScoped<SupabaseClient>(provider => 
+        new SupabaseClient(supabaseUrl, supabaseKey, new Supabase.SupabaseOptions
         {
             AutoConnectRealtime = true
         }));
     
     builder.Services.AddScoped<SupabaseService>();
+    builder.Services.AddScoped<SupabaseAuthStateProvider>();
+    builder.Services.AddScoped<AuthenticationStateProvider>(sp => 
+        sp.GetRequiredService<SupabaseAuthStateProvider>());
 }
 
 var app = builder.Build();

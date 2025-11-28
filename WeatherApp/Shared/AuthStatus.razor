@@ -1,0 +1,32 @@
+@inject SupabaseService SupabaseService
+@inject SupabaseAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized Context="context">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-white-50 d-none d-md-inline">
+                Hello, @(context.User.Identity?.Name ?? "User")
+            </span>
+            <button class="btn btn-sm btn-outline-light" @onclick="LogoutAsync">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-light" href="/auth/signup">Sign Up</a>
+            <a class="btn btn-sm btn-light" href="/auth">Sign In</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        await SupabaseService.SignOutAsync();
+        AuthStateProvider.ResetUser();
+        Navigation.NavigateTo("/auth", true);
+    }
+}
+

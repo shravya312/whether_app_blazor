@@ -43,7 +43,7 @@ namespace WeatherApp.Services
                     var weatherData = new WeatherData
                     {
                         City = normalizedCity,
-                        Country = country,
+                        Country = country ?? string.Empty,
                         Temperature = document.RootElement.GetProperty("main").GetProperty("temp").GetDouble(),
                         Humidity = document.RootElement.GetProperty("main").GetProperty("humidity").GetDouble(),
                         Description = document.RootElement.GetProperty("weather")[0].GetProperty("description").GetString() ?? "",
