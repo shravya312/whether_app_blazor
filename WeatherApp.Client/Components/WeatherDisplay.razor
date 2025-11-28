@@ -1,0 +1,177 @@
+@using WeatherApp.Client.Models
+@using System.Linq
+@inject WeatherApiService WeatherApiService
+@inject PopularCitiesApiService PopularCitiesApiService
+
+<div class="weather-container">
+    <h3>Weather Information</h3>
+    
+    <div class="search-section mb-4">
+        <div class="input-group">
+            <input @bind="searchCity" @bind:event="oninput" class="form-control" placeholder="Enter city name" />
+            <button @onclick="SearchWeather" class="btn btn-primary">Get Weather</button>
+        </div>
+    </div>
+
+    <div class="dropdown-section mb-4">
+        <label class="form-label">Quick pick a popular city</label>
+        <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
+        <select class="form-select city-select" size="5" @onchange="OnCitySelected">
+            @foreach (var city in FilteredCities)
+            {
+                <option value="@city">@city</option>
+            }
+        </select>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="alert alert-info">Loading weather data...</div>
+    }
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    @if (currentWeather != null)
+    {
+        <div class="weather-card">
+            <h4>@currentWeather.City, @currentWeather.Country</h4>
+            <div class="weather-details">
+                <p><strong>Temperature:</strong> @currentWeather.Temperature.ToString("F1")°C</p>
+                <p><strong>Humidity:</strong> @currentWeather.Humidity.ToString("F1")%</p>
+                <p><strong>Description:</strong> @currentWeather.Description</p>
+                <p><strong>Wind Speed:</strong> @currentWeather.WindSpeed.ToString("F1") m/s</p>
+                <p><strong>Last Updated:</strong> @currentWeather.Timestamp.ToLocalTime().ToString("g")</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .weather-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .weather-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .search-section {
+        display: flex;
+        gap: 10px;
+    }
+
+    .dropdown-section {
+        background: #ffffff;
+        border: 1px solid #e2e6ea;
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .city-select {
+        height: auto;
+    }
+</style>
+
+@code {
+    private WeatherData? currentWeather;
+    private string searchCity = "";
+    private bool isLoading = false;
+    private string? errorMessage;
+    private string cityFilter = "";
+    private readonly List<string> defaultPopularCities = new()
+    {
+        "New York",
+        "London",
+        "Tokyo",
+        "Bangalore",
+        "Sydney"
+    };
+    private List<string> popularCities = new();
+    private IEnumerable<string> FilteredCities =>
+        popularCities.Where(city =>
+            string.IsNullOrWhiteSpace(cityFilter) ||
+            city.Contains(cityFilter, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPopularCitiesAsync();
+    }
+
+    private async Task SearchWeather()
+    {
+        if (string.IsNullOrWhiteSpace(searchCity))
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+        currentWeather = null;
+        
+        try
+        {
+            currentWeather = await WeatherApiService.GetWeatherAsync(searchCity);
+            if (currentWeather == null)
+            {
+                errorMessage = "Weather data not found for the specified city.";
+            }
+            else
+            {
+                errorMessage = null; // Clear any previous errors
+                await LoadPopularCitiesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            currentWeather = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task OnCitySelected(ChangeEventArgs args)
+    {
+        var selected = args.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(selected))
+        {
+            searchCity = selected;
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadPopularCitiesAsync()
+    {
+        try
+        {
+            var cities = await PopularCitiesApiService.GetPopularCitiesAsync(5);
+            if (cities != null && cities.Any())
+            {
+                popularCities = cities;
+            }
+            else if (!popularCities.Any())
+            {
+                popularCities = new List<string>(defaultPopularCities);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading popular cities: {ex.Message}");
+            if (!popularCities.Any())
+            {
+                popularCities = new List<string>(defaultPopularCities);
+            }
+        }
+    }
+}
+

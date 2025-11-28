@@ -1,0 +1,319 @@
+@page "/auth"
+@page "/auth/{Mode}"
+@using Microsoft.AspNetCore.WebUtilities
+@using Supabase.Gotrue.Exceptions
+@attribute [AllowAnonymous]
+@inject SupabaseService SupabaseService
+@inject NavigationManager Navigation
+@inject SupabaseAuthStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(isSignInMode ? "Sign In" : "Sign Up")</PageTitle>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold">Weather App</h2>
+                        <p class="text-muted">@(isSignInMode ? "Welcome back!" : "Create your account")</p>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn @(isSignInMode ? "btn-primary" : "btn-outline-primary") flex-fill" 
+                                @onclick="() => SwitchMode(true)">
+                            Sign In
+                        </button>
+                        <button class="btn @(!isSignInMode ? "btn-primary" : "btn-outline-primary") flex-fill" 
+                                @onclick="() => SwitchMode(false)">
+                            Sign Up
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @errorMessage
+                            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success">
+                            @successMessage
+                        </div>
+                    }
+
+                    <EditForm Model="@formModel" OnValidSubmit="HandleSubmitAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger small" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <InputText @bind-Value="formModel.Email" class="form-control form-control-lg" 
+                                      placeholder="Enter your email" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Password</label>
+                            <InputText @bind-Value="formModel.Password" class="form-control form-control-lg" 
+                                      type="password" placeholder="Enter your password" />
+                        </div>
+
+                        @if (!isSignInMode)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Confirm Password</label>
+                                <InputText @bind-Value="formModel.ConfirmPassword" class="form-control form-control-lg" 
+                                          type="password" placeholder="Confirm your password" />
+                            </div>
+                        }
+
+                        <button class="btn btn-primary btn-lg w-100 mb-3" type="submit" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                @(isSignInMode ? "Signing in..." : "Creating account...")
+                            }
+                            else
+                            {
+                                @(isSignInMode ? "Sign In" : "Sign Up")
+                            }
+                        </button>
+                    </EditForm>
+
+                    @if (isSignInMode)
+                    {
+                        <div class="text-center">
+                            <small class="text-muted">Don't have an account? 
+                                <a href="/auth/signup" class="text-decoration-none">Sign up</a>
+                            </small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Mode { get; set; }
+
+    private readonly AuthFormModel formModel = new();
+    private bool isSignInMode = true;
+    private bool isSubmitting;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override void OnInitialized()
+    {
+        SetModeFromRoute();
+        
+        var user = SupabaseService.GetCurrentUser();
+        if (user != null)
+        {
+            Navigation.NavigateTo("/", true);
+        }
+    }
+
+    private void SetModeFromRoute()
+    {
+        if (!string.IsNullOrEmpty(Mode))
+        {
+            isSignInMode = !Mode.Equals("signup", StringComparison.OrdinalIgnoreCase);
+        }
+        else
+        {
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("mode", out var modeValue))
+            {
+                isSignInMode = !string.Equals(modeValue, "signup", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            if (!isSignInMode && formModel.Password != formModel.ConfirmPassword)
+            {
+                errorMessage = "Passwords do not match.";
+                isSubmitting = false;
+                return;
+            }
+
+            if (isSignInMode)
+            {
+                var user = await SupabaseService.SignInAsync(formModel.Email, formModel.Password);
+                if (user == null)
+                {
+                    errorMessage = "Invalid email or password. Please try again.";
+                }
+                else
+                {
+                    AuthStateProvider.UpdateUser(user);
+                    successMessage = "Sign in successful! Redirecting...";
+                    StateHasChanged();
+                    await Task.Delay(500);
+                    Navigation.NavigateTo("/", true);
+                }
+            }
+            else
+            {
+                try
+                {
+                    var user = await SupabaseService.SignUpAsync(formModel.Email, formModel.Password);
+                    if (user == null)
+                    {
+                        errorMessage = "Registration failed. Please try again.";
+                    }
+                    else
+                    {
+                        successMessage = "Account created successfully! Redirecting...";
+                        AuthStateProvider.UpdateUser(user);
+                        StateHasChanged();
+                        await Task.Delay(500);
+                        Navigation.NavigateTo("/", true);
+                    }
+                }
+                catch (SupabaseAuthException)
+                {
+                    throw;
+                }
+            }
+        }
+        catch (SupabaseAuthException ex)
+        {
+            if (ex.ErrorCode == "user_already_registered" || 
+                ex.Message.Contains("already") || 
+                ex.Message.Contains("exists") ||
+                ex.Reason?.Contains("already") == true)
+            {
+                errorMessage = "An account with this email already exists. Please sign in instead.";
+                if (!isSignInMode)
+                {
+                    isSignInMode = true;
+                    formModel.Password = string.Empty;
+                    formModel.ConfirmPassword = string.Empty;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                errorMessage = isSignInMode
+                    ? $"Sign in failed: {GetUserFriendlyError(ex.Message)}"
+                    : $"Sign up failed: {GetUserFriendlyError(ex.Message)}";
+            }
+        }
+        catch (GotrueException ex)
+        {
+            if (ex.Message.Contains("already") || ex.Message.Contains("exists"))
+            {
+                errorMessage = "An account with this email already exists. Please sign in instead.";
+                if (!isSignInMode)
+                {
+                    isSignInMode = true;
+                    formModel.Password = string.Empty;
+                    formModel.ConfirmPassword = string.Empty;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                errorMessage = GetUserFriendlyError(ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = isSignInMode
+                ? $"Sign in failed: {GetUserFriendlyError(ex.Message)}"
+                : $"Sign up failed: {GetUserFriendlyError(ex.Message)}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void SwitchMode(bool signIn)
+    {
+        if (isSignInMode == signIn) return;
+
+        isSignInMode = signIn;
+        formModel.Password = string.Empty;
+        formModel.ConfirmPassword = string.Empty;
+        errorMessage = null;
+        successMessage = null;
+        
+        var newPath = signIn ? "/auth" : "/auth/signup";
+        Navigation.NavigateTo(newPath);
+    }
+
+    private string GetUserFriendlyError(string errorMessage)
+    {
+        if (errorMessage.Contains("invalid_credentials"))
+        {
+            return "Invalid email or password. Please check your credentials and try again.";
+        }
+        
+        if (errorMessage.Contains("email_not_confirmed") || errorMessage.Contains("email_not_verified"))
+        {
+            return "Please verify your email address before signing in.";
+        }
+        
+        if (errorMessage.Contains("weak_password"))
+        {
+            return "Password is too weak. Please use a stronger password.";
+        }
+        
+        if (errorMessage.Contains("invalid_email"))
+        {
+            return "Invalid email address. Please enter a valid email.";
+        }
+        
+        try
+        {
+            var jsonStart = errorMessage.IndexOf('{');
+            if (jsonStart >= 0)
+            {
+                var jsonPart = errorMessage.Substring(jsonStart);
+                if (jsonPart.Contains("\"msg\""))
+                {
+                    var msgStart = jsonPart.IndexOf("\"msg\"") + 6;
+                    var msgEnd = jsonPart.IndexOf('"', msgStart);
+                    if (msgEnd > msgStart)
+                    {
+                        return jsonPart.Substring(msgStart, msgEnd - msgStart);
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
+        
+        return errorMessage;
+    }
+
+    private class AuthFormModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string Password { get; set; } = string.Empty;
+
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}
+

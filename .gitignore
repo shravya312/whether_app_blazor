@@ -1,31 +1,124 @@
-# Build results
+## .NET Build Artifacts
 bin/
 obj/
-
-# Visual Studio / VS Code
-.vs/
-.vscode/
-
-# User-specific files
+*.dll
+*.exe
+*.pdb
+*.cache
 *.user
-*.userosscache
 *.suo
+*.userosscache
 *.sln.docstates
 
-# Logs
+## Build Results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Rider
+.idea/
+*.sln.iml
+
+## User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+## Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+*.trx
+
+## Coverage Reports
+coverage/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+## Publish
+publish/
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.publishproj
+
+## Sensitive Configuration Files
+# DO NOT COMMIT files with secrets
+appsettings.Development.json
+appsettings.Production.json
+*.secrets.json
+
+# Keep template (without actual secrets)
+!appsettings.json
+
+## Environment Variables
+.env
+.env.local
+.env.*.local
+
+## Logs
+logs/
 *.log
 
-# Generated files
-*.g.cs
-*.GeneratedMSBuildEditorConfig.editorconfig
-*.*proj.FileListAbsolute.txt
+## Temporary Files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
 
-# OS artifacts
+## OS Files
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Tooling
+## Blazor Specific
+*.blazor.*.js
+*.blazor.*.js.map
+
+## IDE Files
+.vscode/
 .idea/
-.ionide/
+*.sln.iml
 
-
+## Node (if using npm packages)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
