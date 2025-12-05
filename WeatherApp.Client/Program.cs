@@ -29,7 +29,11 @@ try
     builder.Services.AddScoped<IpGeolocationService>();
     builder.Services.AddScoped<FavoriteCitiesService>();
     builder.Services.AddScoped<ThemeService>();
+    builder.Services.AddScoped<AlertSettingsService>();
+    builder.Services.AddScoped<AlertHistoryService>();
     builder.Services.AddScoped<WeatherAlertsService>();
+    builder.Services.AddScoped<SearchedCitiesService>();
+    builder.Services.AddScoped<FavoriteCitiesMonitorService>();
 
     // Add Authorization
     builder.Services.AddAuthorizationCore();

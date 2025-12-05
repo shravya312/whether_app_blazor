@@ -1,6 +1,10 @@
 @using WeatherApp.Client.Models
 @using WeatherApp.Client.Services
 @inject WeatherAlertsService WeatherAlertsService
+@inject AlertSettingsService? AlertSettingsService
+@inject AlertHistoryService? AlertHistoryService
+@inject SupabaseService SupabaseService
+@inject IJSRuntime JSRuntime
 
 @using static WeatherApp.Client.Services.WeatherAlertsService
 
@@ -19,7 +23,7 @@
                     <div>
                         <strong>@alert.Type.ToString()</strong>
                         <p class="mb-0">@alert.Message</p>
-                        <small>@alert.City - @alert.Timestamp.ToLocalTime().ToString("g")</small>
+                        <small>@alert.City, @alert.Country - @alert.Timestamp.ToLocalTime().ToString("g")</small>
                     </div>
                 </div>
                 <button type="button" class="btn-close" @onclick="() => DismissAlert(alert)"></button>
@@ -42,15 +46,50 @@
     public ForecastData? ForecastData { get; set; }
 
     private List<WeatherAlert> alerts = new();
-    private HashSet<WeatherAlert> dismissedAlerts = new();
+    private HashSet<string> dismissedAlertIds = new();
+    private AlertSettings? alertSettings;
+    private string? currentUserId;
 
-    protected override void OnParametersSet()
+    protected override async Task OnInitializedAsync()
+    {
+        var user = SupabaseService.GetCurrentUser();
+        if (user != null && AlertSettingsService != null)
+        {
+            currentUserId = user.Id;
+            alertSettings = await AlertSettingsService.GetAlertSettingsAsync(currentUserId);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
     {
         if (CurrentWeather != null)
         {
-            alerts = WeatherAlertsService.CheckWeatherAlerts(CurrentWeather, ForecastData)
-                .Where(a => !dismissedAlerts.Contains(a))
+            var newAlerts = await WeatherAlertsService.CheckWeatherAlertsAsync(CurrentWeather, ForecastData, alertSettings);
+            
+            // Set country for alerts
+            foreach (var alert in newAlerts)
+            {
+                alert.Country = CurrentWeather.Country;
+            }
+            
+            alerts = newAlerts
+                .Where(a => !dismissedAlertIds.Contains(a.Id))
                 .ToList();
+
+            // Save alerts to history and show notifications
+            if (AlertHistoryService != null && currentUserId != null)
+            {
+                foreach (var alert in alerts)
+                {
+                    await AlertHistoryService.SaveAlertAsync(currentUserId, alert);
+                    
+                    // Show browser notification if enabled
+                    if (alertSettings?.EnablePushNotifications == true)
+                    {
+                        await ShowNotification(alert);
+                    }
+                }
+            }
         }
         else
         {
@@ -80,15 +119,39 @@
             AlertType.HeavyRain => "bi-cloud-rain-heavy",
             AlertType.HeavySnow => "bi-snow",
             AlertType.Fog => "bi-cloud-fog",
+            AlertType.HighHumidity => "bi-droplet-fill",
+            AlertType.LowHumidity => "bi-droplet",
             _ => "bi-exclamation-triangle"
         };
     }
 
     private void DismissAlert(WeatherAlert alert)
     {
-        dismissedAlerts.Add(alert);
+        dismissedAlertIds.Add(alert.Id);
         alerts.Remove(alert);
         StateHasChanged();
+    }
+
+    private async Task ShowNotification(WeatherAlert alert)
+    {
+        try
+        {
+            if (await JSRuntime.InvokeAsync<string>("eval", "typeof Notification !== 'undefined' && Notification.permission === 'granted'") == "True")
+            {
+                await JSRuntime.InvokeVoidAsync("eval", $@"
+                    new Notification('{alert.Type} Alert - {alert.City}', {{
+                        body: '{alert.Message}',
+                        icon: '/favicon.ico',
+                        tag: '{alert.Id}',
+                        requireInteraction: true
+                    }});
+                ");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error showing notification: {ex.Message}");
+        }
     }
 }
 

@@ -15,10 +15,18 @@ namespace WeatherApp.Client.Services
             _currentUser = _supabaseService.GetCurrentUser();
         }
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            // Ensure we get the latest user state
             _currentUser = _supabaseService.GetCurrentUser();
-            return Task.FromResult(CreateAuthenticationState(_currentUser));
+            
+            // If no user found, try to get from session
+            if (_currentUser == null)
+            {
+                _currentUser = await _supabaseService.GetUserAsync();
+            }
+            
+            return CreateAuthenticationState(_currentUser);
         }
 
         public void UpdateUser(User? user)

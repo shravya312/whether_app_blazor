@@ -1,13 +1,23 @@
 @inject SupabaseService SupabaseService
 @inject SupabaseAuthStateProvider AuthStateProvider
 @inject NavigationManager Navigation
+@using System.Security.Claims
 
 <AuthorizeView>
     <Authorized Context="context">
+        @{
+            var email = context.User.FindFirst(ClaimTypes.Email)?.Value ?? context.User.Identity?.Name ?? "";
+            var firstLetter = !string.IsNullOrEmpty(email) ? email[0].ToString().ToUpper() : "U";
+        }
         <div class="d-flex align-items-center gap-3">
-            <span class="text-white-50 d-none d-md-inline">
-                Hello, @(context.User.Identity?.Name ?? "User")
-            </span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar-circle" title="@email">
+                    @firstLetter
+                </div>
+                <span class="text-white-50 d-none d-md-inline">
+                    @email
+                </span>
+            </div>
             <button class="btn btn-sm btn-outline-light" @onclick="LogoutAsync">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </button>

@@ -101,83 +101,104 @@
         </div>
     }
 
-    @if (forecastData != null && forecastData.Items.Any())
+    @if (forecastDataDict.Any())
     {
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Temperature Trends</h5>
-                <div class="temperature-chart">
-                    @foreach (var item in forecastData.Items.Take(40).GroupBy(f => f.DateTime.Date).Take(5))
-                    {
-                        var dayItems = item.OrderBy(f => f.DateTime).ToList();
-                        var avgTemp = dayItems.Average(f => f.Temperature);
-                        var minTemp = dayItems.Min(f => f.MinTemperature);
-                        var maxTemp = dayItems.Max(f => f.MaxTemperature);
-                        <div class="day-trend mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong>@dayItems.First().DateTime.ToString("dddd, MMM dd")</strong>
-                                <span>Avg: @avgTemp.ToString("F1")°C</span>
+        @foreach (var forecastEntry in forecastDataDict)
+        {
+            var cityKey = forecastEntry.Key;
+            var forecastData = forecastEntry.Value;
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Temperature Trends - @cityKey</h5>
+                    <div class="temperature-chart">
+                        @foreach (var item in forecastData.Items.Take(40).GroupBy(f => f.DateTime.Date).Take(5))
+                        {
+                            var dayItems = item.OrderBy(f => f.DateTime).ToList();
+                            var avgTemp = dayItems.Average(f => f.Temperature);
+                            var minTemp = dayItems.Min(f => f.MinTemperature);
+                            var maxTemp = dayItems.Max(f => f.MaxTemperature);
+                            <div class="day-trend mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>@dayItems.First().DateTime.ToString("dddd, MMM dd")</strong>
+                                    <span>Avg: @avgTemp.ToString("F1")°C</span>
+                                </div>
+                                <div class="progress" style="height: 30px;">
+                                    <div class="progress-bar bg-info" role="progressbar" 
+                                         style="width: @((minTemp + 50) * 100 / 100)%" 
+                                         title="Min: @minTemp.ToString("F1")°C">
+                                        @minTemp.ToString("F1")°C
+                                    </div>
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: @((avgTemp - minTemp) * 100 / (maxTemp - minTemp + 1))%" 
+                                         title="Avg: @avgTemp.ToString("F1")°C">
+                                        @avgTemp.ToString("F1")°C
+                                    </div>
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: @((maxTemp - avgTemp) * 100 / (maxTemp - minTemp + 1))%" 
+                                         title="Max: @maxTemp.ToString("F1")°C">
+                                        @maxTemp.ToString("F1")°C
+                                    </div>
+                                </div>
                             </div>
-                            <div class="progress" style="height: 30px;">
-                                <div class="progress-bar bg-info" role="progressbar" 
-                                     style="width: @((minTemp + 50) * 100 / 100)%" 
-                                     title="Min: @minTemp.ToString("F1")°C">
-                                    @minTemp.ToString("F1")°C
-                                </div>
-                                <div class="progress-bar bg-success" role="progressbar" 
-                                     style="width: @((avgTemp - minTemp) * 100 / (maxTemp - minTemp + 1))%" 
-                                     title="Avg: @avgTemp.ToString("F1")°C">
-                                    @avgTemp.ToString("F1")°C
-                                </div>
-                                <div class="progress-bar bg-warning" role="progressbar" 
-                                     style="width: @((maxTemp - avgTemp) * 100 / (maxTemp - minTemp + 1))%" 
-                                     title="Max: @maxTemp.ToString("F1")°C">
-                                    @maxTemp.ToString("F1")°C
-                                </div>
-                            </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 </div>
             </div>
+        }
+
+        <div class="row">
+            @foreach (var forecastEntry in forecastDataDict)
+            {
+                var cityKey = forecastEntry.Key;
+                var forecastData = forecastEntry.Value;
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Humidity Patterns - @cityKey</h5>
+                            <div class="humidity-stats">
+                                @{
+                                    var avgHumidity = forecastData.Items.Average(f => f.Humidity);
+                                    var maxHumidity = forecastData.Items.Max(f => f.Humidity);
+                                    var minHumidity = forecastData.Items.Min(f => f.Humidity);
+                                }
+                                <p><strong>Average:</strong> @avgHumidity.ToString("F1")%</p>
+                                <p><strong>Maximum:</strong> @maxHumidity.ToString("F1")%</p>
+                                <p><strong>Minimum:</strong> @minHumidity.ToString("F1")%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Humidity Patterns</h5>
-                        <div class="humidity-stats">
-                            @{
-                                var avgHumidity = forecastData.Items.Average(f => f.Humidity);
-                                var maxHumidity = forecastData.Items.Max(f => f.Humidity);
-                                var minHumidity = forecastData.Items.Min(f => f.Humidity);
-                            }
-                            <p><strong>Average:</strong> @avgHumidity.ToString("F1")%</p>
-                            <p><strong>Maximum:</strong> @maxHumidity.ToString("F1")%</p>
-                            <p><strong>Minimum:</strong> @minHumidity.ToString("F1")%</p>
+            @foreach (var forecastEntry in forecastDataDict)
+            {
+                var cityKey = forecastEntry.Key;
+                var forecastData = forecastEntry.Value;
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Precipitation Analysis - @cityKey</h5>
+                            <div class="precipitation-stats">
+                                @{
+                                    var totalPrecipitation = forecastData.Items
+                                        .Where(f => f.Precipitation.HasValue)
+                                        .Sum(f => f.Precipitation!.Value);
+                                    var rainyDays = forecastData.Items
+                                        .GroupBy(f => f.DateTime.Date)
+                                        .Count(g => g.Any(f => f.Precipitation.HasValue && f.Precipitation.Value > 0));
+                                }
+                                <p><strong>Total Precipitation:</strong> @totalPrecipitation.ToString("F2") mm</p>
+                                <p><strong>Rainy Days:</strong> @rainyDays out of @forecastData.Items.GroupBy(f => f.DateTime.Date).Count()</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Precipitation Analysis</h5>
-                        <div class="precipitation-stats">
-                            @{
-                                var totalPrecipitation = forecastData.Items
-                                    .Where(f => f.Precipitation.HasValue)
-                                    .Sum(f => f.Precipitation!.Value);
-                                var rainyDays = forecastData.Items
-                                    .GroupBy(f => f.DateTime.Date)
-                                    .Count(g => g.Any(f => f.Precipitation.HasValue && f.Precipitation.Value > 0));
-                            }
-                            <p><strong>Total Precipitation:</strong> @totalPrecipitation.ToString("F2") mm</p>
-                            <p><strong>Rainy Days:</strong> @rainyDays out of @forecastData.Items.GroupBy(f => f.DateTime.Date).Count()</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
     }
 </div>
@@ -199,7 +220,7 @@
     private string city2 = "";
     private bool isComparing = false;
     private Dictionary<string, WeatherData> comparisonData = new();
-    private ForecastData? forecastData;
+    private Dictionary<string, ForecastData> forecastDataDict = new();
 
     private async Task CompareCities()
     {
@@ -216,19 +237,32 @@
             var weather1 = await WeatherApiService.GetWeatherAsync(city1);
             var weather2 = await WeatherApiService.GetWeatherAsync(city2);
 
+            forecastDataDict.Clear();
+            
             if (weather1 != null)
             {
-                comparisonData[$"{weather1.City}, {weather1.Country}"] = weather1;
+                var cityKey1 = $"{weather1.City}, {weather1.Country}";
+                comparisonData[cityKey1] = weather1;
+                
+                // Load forecast for City 1
+                var forecast1 = await WeatherApiService.GetForecastAsync(weather1.City, weather1.Country);
+                if (forecast1 != null)
+                {
+                    forecastDataDict[cityKey1] = forecast1;
+                }
             }
 
             if (weather2 != null)
             {
-                comparisonData[$"{weather2.City}, {weather2.Country}"] = weather2;
-            }
-
-            if (weather1 != null)
-            {
-                forecastData = await WeatherApiService.GetForecastAsync(weather1.City, weather1.Country);
+                var cityKey2 = $"{weather2.City}, {weather2.Country}";
+                comparisonData[cityKey2] = weather2;
+                
+                // Load forecast for City 2
+                var forecast2 = await WeatherApiService.GetForecastAsync(weather2.City, weather2.Country);
+                if (forecast2 != null)
+                {
+                    forecastDataDict[cityKey2] = forecast2;
+                }
             }
         }
         catch (Exception ex)

@@ -108,14 +108,21 @@
     private string? errorMessage;
     private string? successMessage;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         SetModeFromRoute();
         
+        // Check if user is already signed in
         var user = SupabaseService.GetCurrentUser();
+        if (user == null)
+        {
+            user = await SupabaseService.GetUserAsync();
+        }
+        
         if (user != null)
         {
-            Navigation.NavigateTo("/", true);
+            AuthStateProvider.UpdateUser(user);
+            Navigation.NavigateTo("/", false);
         }
     }
 
@@ -159,11 +166,16 @@
                 }
                 else
                 {
+                    // Update authentication state first
                     AuthStateProvider.UpdateUser(user);
                     successMessage = "Sign in successful! Redirecting...";
                     StateHasChanged();
-                    await Task.Delay(500);
-                    Navigation.NavigateTo("/", true);
+                    
+                    // Wait for state to propagate
+                    await Task.Delay(300);
+                    
+                    // Navigate without force reload to preserve auth state
+                    Navigation.NavigateTo("/", false);
                 }
             }
             else
@@ -180,8 +192,8 @@
                         successMessage = "Account created successfully! Redirecting...";
                         AuthStateProvider.UpdateUser(user);
                         StateHasChanged();
-                        await Task.Delay(500);
-                        Navigation.NavigateTo("/", true);
+                        await Task.Delay(300);
+                        Navigation.NavigateTo("/", false);
                     }
                 }
                 catch (SupabaseAuthException)

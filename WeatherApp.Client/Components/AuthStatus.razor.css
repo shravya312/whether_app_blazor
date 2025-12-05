@@ -1,0 +1,77 @@
+.user-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.user-avatar-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Alternative color schemes based on first letter */
+.user-avatar-circle[data-letter="A"],
+.user-avatar-circle[data-letter="B"],
+.user-avatar-circle[data-letter="C"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.user-avatar-circle[data-letter="D"],
+.user-avatar-circle[data-letter="E"],
+.user-avatar-circle[data-letter="F"] {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.user-avatar-circle[data-letter="G"],
+.user-avatar-circle[data-letter="H"],
+.user-avatar-circle[data-letter="I"] {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.user-avatar-circle[data-letter="J"],
+.user-avatar-circle[data-letter="K"],
+.user-avatar-circle[data-letter="L"] {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.user-avatar-circle[data-letter="M"],
+.user-avatar-circle[data-letter="N"],
+.user-avatar-circle[data-letter="O"] {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.user-avatar-circle[data-letter="P"],
+.user-avatar-circle[data-letter="Q"],
+.user-avatar-circle[data-letter="R"] {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.user-avatar-circle[data-letter="S"],
+.user-avatar-circle[data-letter="T"],
+.user-avatar-circle[data-letter="U"] {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.user-avatar-circle[data-letter="V"],
+.user-avatar-circle[data-letter="W"],
+.user-avatar-circle[data-letter="X"] {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.user-avatar-circle[data-letter="Y"],
+.user-avatar-circle[data-letter="Z"] {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+

@@ -5,6 +5,7 @@
 @inject PopularCitiesApiService PopularCitiesApiService
 @inject IpGeolocationService IpGeolocationService
 @inject FavoriteCitiesService FavoriteCitiesService
+@inject SearchedCitiesService SearchedCitiesService
 @inject SupabaseService SupabaseService
 @inject ThemeService ThemeService
 @inject IJSRuntime JSRuntime
@@ -659,6 +660,12 @@
                 
                 if (currentUserId != null)
                 {
+                    // Track searched city
+                    await SearchedCitiesService.AddSearchedCityAsync(
+                        currentUserId, 
+                        currentWeather.City, 
+                        currentWeather.Country);
+                    
                     // Auto-add manually searched city to favorites and track search count
                     await FavoriteCitiesService.AddOrUpdateFavoriteAsync(
                         currentUserId, 
@@ -766,6 +773,12 @@
                 
                 if (currentUserId != null)
                 {
+                    // Track searched city
+                    await SearchedCitiesService.AddSearchedCityAsync(
+                        currentUserId, 
+                        currentWeather.City, 
+                        currentWeather.Country);
+                    
                     // Auto-add location-based city to favorites and track search count
                     await FavoriteCitiesService.AddOrUpdateFavoriteAsync(
                         currentUserId, 
