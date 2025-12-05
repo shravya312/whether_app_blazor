@@ -16,17 +16,20 @@ A modern weather application built with Blazor WebAssembly and .NET 8 Web API, f
 ### Core Features
 - **User Authentication**: Sign up and sign in using Supabase Auth with role-based access control
 - **Weather Search**: Search weather by city name with optional country code
-- **Auto-Location Detection**: Automatic weather detection using browser geolocation API
-- **Dynamic Popular Cities**: Top 5 most searched cities displayed dynamically
+- **IP-Based Location Detection**: Automatic weather detection using IP geolocation (fast and reliable)
+- **Dynamic Popular Cities**: Top 5 most searched cities displayed dynamically based on MongoDB search statistics
+- **Smart Favorite Cities**: Auto-adds manually searched cities to favorites, ordered by search frequency
 - **Real-time Weather Data**: Current weather conditions with extended metrics (temperature, humidity, pressure, visibility, wind speed, cloudiness)
 - **5-Day Forecast**: Detailed 5-day weather forecast with hourly breakdowns
 - **Case-Insensitive Search**: Smart city name normalization
+- **Location Mapping**: Intelligent city name mapping (replaces landmarks with city names)
 
 ### User-Specific Features
 - **Non-Registered Users**: Basic current weather info, limited city search, basic forecast view
 - **Registered Users**: 
   - Detailed weather metrics
-  - Favorite cities management
+  - **Smart Favorite Cities**: Automatically tracks and orders favorite cities by search frequency
+  - Auto-add cities to favorites when manually searched
   - Extended forecast data
   - Custom dashboard
   - Weather analytics
@@ -274,7 +277,7 @@ CREATE INDEX idx_favorite_cities_user_id ON favorite_cities(user_id);
 ## 🎨 Key Features Explained
 
 ### Dynamic Popular Cities
-The application tracks how many times each city is searched and displays the top 5 most popular cities in a dropdown. This list updates automatically as users search for different cities.
+The application tracks how many times each city is searched in MongoDB and displays the top 5 most popular cities in a dropdown. This list updates automatically after each search, showing cities ordered by search frequency.
 
 ### Case-Insensitive Search
 City names are normalized to Title Case (e.g., "bangalore" → "Bangalore") to ensure consistent searching and storage.
@@ -282,14 +285,22 @@ City names are normalized to Title Case (e.g., "bangalore" → "Bangalore") to e
 ### Weather Data Caching
 Weather data is stored in MongoDB to reduce API calls and improve performance.
 
-### Auto-Location Detection
-Uses browser Geolocation API to automatically detect user's location and fetch weather data. Requires user permission.
+### IP-Based Location Detection
+Uses IP geolocation service to automatically detect user's approximate location and fetch weather data. Faster and more reliable than browser geolocation, works without permission prompts.
+
+### Location Mapping
+Intelligently maps coordinates to city names, replacing landmarks (like "Kanija Bhavan") with proper city names (like "Bangalore") for better user experience.
+
+### Smart Favorite Cities
+- **Auto-Add**: Manually searched cities are automatically added to favorites
+- **Search-Based Ordering**: Favorite cities are ordered by search frequency (most searched first)
+- **Search Tracking**: Each favorite city tracks how many times it's been searched
+- **Real-time Updates**: Favorite cities list updates automatically after each search
+- **Quick Access**: Click any favorite city to instantly load its weather
+- **Storage**: Data is stored locally using localStorage for fast access
 
 ### 5-Day Forecast
 Provides detailed weather forecast for the next 5 days with 3-hour intervals, including temperature ranges, precipitation, and weather conditions.
-
-### Favorite Cities
-Registered users can save favorite cities for quick access. Data is stored in Supabase and synced across devices.
 
 ### Weather Alerts
 Automatically detects and displays alerts for severe weather conditions including extreme temperatures, high winds, thunderstorms, and heavy precipitation.
