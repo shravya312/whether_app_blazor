@@ -25,6 +25,11 @@ try
     // Add API Services
     builder.Services.AddScoped<WeatherApiService>();
     builder.Services.AddScoped<PopularCitiesApiService>();
+    builder.Services.AddScoped<GeolocationService>();
+    builder.Services.AddScoped<IpGeolocationService>();
+    builder.Services.AddScoped<FavoriteCitiesService>();
+    builder.Services.AddScoped<ThemeService>();
+    builder.Services.AddScoped<WeatherAlertsService>();
 
     // Add Authorization
     builder.Services.AddAuthorizationCore();

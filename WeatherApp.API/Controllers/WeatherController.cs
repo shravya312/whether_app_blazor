@@ -48,6 +48,47 @@ namespace WeatherApp.API.Controllers
 
             return Ok(weather);
         }
+
+        [HttpGet("forecast/{city}")]
+        public async Task<ActionResult<ForecastData>> GetForecast(string city, [FromQuery] string? country = null)
+        {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return BadRequest("City name is required");
+            }
+
+            var forecast = await _weatherService.GetForecastAsync(city, country);
+            if (forecast == null)
+            {
+                return NotFound($"Forecast data not found for {city}");
+            }
+
+            return Ok(forecast);
+        }
+
+        [HttpPost("location")]
+        public async Task<ActionResult<WeatherData>> GetWeatherByLocation([FromBody] LocationRequest request)
+        {
+            var weather = await _weatherService.GetWeatherByCoordinatesAsync(request.Latitude, request.Longitude);
+            if (weather == null)
+            {
+                return NotFound("Weather data not found for the specified location");
+            }
+
+            return Ok(weather);
+        }
+
+        [HttpPost("forecast/location")]
+        public async Task<ActionResult<ForecastData>> GetForecastByLocation([FromBody] LocationRequest request)
+        {
+            var forecast = await _weatherService.GetForecastByCoordinatesAsync(request.Latitude, request.Longitude);
+            if (forecast == null)
+            {
+                return NotFound("Forecast data not found for the specified location");
+            }
+
+            return Ok(forecast);
+        }
     }
 }
 

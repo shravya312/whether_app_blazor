@@ -1,0 +1,244 @@
+@page "/analytics"
+@attribute [Authorize]
+@using WeatherApp.Client.Models
+@inject WeatherApiService WeatherApiService
+@inject FavoriteCitiesService FavoriteCitiesService
+@inject SupabaseService SupabaseService
+
+<PageTitle>Weather Analytics - Weather App</PageTitle>
+
+<div class="container mt-4">
+    <h2 class="mb-4">Weather Analytics</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Compare Cities</h5>
+                    <div class="mb-3">
+                        <label class="form-label">City 1</label>
+                        <input @bind="city1" class="form-control" placeholder="Enter city name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">City 2</label>
+                        <input @bind="city2" class="form-control" placeholder="Enter city name" />
+                    </div>
+                    <button class="btn btn-primary" @onclick="CompareCities" disabled="@isComparing">
+                        @if (isComparing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Compare
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (comparisonData.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">City Comparison</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                @foreach (var city in comparisonData.Keys)
+                                {
+                                    <th>@city</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Temperature</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.Temperature.ToString("F1")°C</td>
+                                }
+                            </tr>
+                            <tr>
+                                <td><strong>Feels Like</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.FeelsLike.ToString("F1")°C</td>
+                                }
+                            </tr>
+                            <tr>
+                                <td><strong>Humidity</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.Humidity.ToString("F0")%</td>
+                                }
+                            </tr>
+                            <tr>
+                                <td><strong>Wind Speed</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.WindSpeed.ToString("F1") m/s</td>
+                                }
+                            </tr>
+                            <tr>
+                                <td><strong>Pressure</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.Pressure.ToString("F0") hPa</td>
+                                }
+                            </tr>
+                            <tr>
+                                <td><strong>Condition</strong></td>
+                                @foreach (var data in comparisonData.Values)
+                                {
+                                    <td>@data.Description</td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (forecastData != null && forecastData.Items.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Temperature Trends</h5>
+                <div class="temperature-chart">
+                    @foreach (var item in forecastData.Items.Take(40).GroupBy(f => f.DateTime.Date).Take(5))
+                    {
+                        var dayItems = item.OrderBy(f => f.DateTime).ToList();
+                        var avgTemp = dayItems.Average(f => f.Temperature);
+                        var minTemp = dayItems.Min(f => f.MinTemperature);
+                        var maxTemp = dayItems.Max(f => f.MaxTemperature);
+                        <div class="day-trend mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>@dayItems.First().DateTime.ToString("dddd, MMM dd")</strong>
+                                <span>Avg: @avgTemp.ToString("F1")°C</span>
+                            </div>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: @((minTemp + 50) * 100 / 100)%" 
+                                     title="Min: @minTemp.ToString("F1")°C">
+                                    @minTemp.ToString("F1")°C
+                                </div>
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: @((avgTemp - minTemp) * 100 / (maxTemp - minTemp + 1))%" 
+                                     title="Avg: @avgTemp.ToString("F1")°C">
+                                    @avgTemp.ToString("F1")°C
+                                </div>
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: @((maxTemp - avgTemp) * 100 / (maxTemp - minTemp + 1))%" 
+                                     title="Max: @maxTemp.ToString("F1")°C">
+                                    @maxTemp.ToString("F1")°C
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Humidity Patterns</h5>
+                        <div class="humidity-stats">
+                            @{
+                                var avgHumidity = forecastData.Items.Average(f => f.Humidity);
+                                var maxHumidity = forecastData.Items.Max(f => f.Humidity);
+                                var minHumidity = forecastData.Items.Min(f => f.Humidity);
+                            }
+                            <p><strong>Average:</strong> @avgHumidity.ToString("F1")%</p>
+                            <p><strong>Maximum:</strong> @maxHumidity.ToString("F1")%</p>
+                            <p><strong>Minimum:</strong> @minHumidity.ToString("F1")%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Precipitation Analysis</h5>
+                        <div class="precipitation-stats">
+                            @{
+                                var totalPrecipitation = forecastData.Items
+                                    .Where(f => f.Precipitation.HasValue)
+                                    .Sum(f => f.Precipitation!.Value);
+                                var rainyDays = forecastData.Items
+                                    .GroupBy(f => f.DateTime.Date)
+                                    .Count(g => g.Any(f => f.Precipitation.HasValue && f.Precipitation.Value > 0));
+                            }
+                            <p><strong>Total Precipitation:</strong> @totalPrecipitation.ToString("F2") mm</p>
+                            <p><strong>Rainy Days:</strong> @rainyDays out of @forecastData.Items.GroupBy(f => f.DateTime.Date).Count()</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .temperature-chart .progress {
+        position: relative;
+    }
+
+    .day-trend {
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
+
+@code {
+    private string city1 = "";
+    private string city2 = "";
+    private bool isComparing = false;
+    private Dictionary<string, WeatherData> comparisonData = new();
+    private ForecastData? forecastData;
+
+    private async Task CompareCities()
+    {
+        if (string.IsNullOrWhiteSpace(city1) || string.IsNullOrWhiteSpace(city2))
+        {
+            return;
+        }
+
+        isComparing = true;
+        comparisonData.Clear();
+
+        try
+        {
+            var weather1 = await WeatherApiService.GetWeatherAsync(city1);
+            var weather2 = await WeatherApiService.GetWeatherAsync(city2);
+
+            if (weather1 != null)
+            {
+                comparisonData[$"{weather1.City}, {weather1.Country}"] = weather1;
+            }
+
+            if (weather2 != null)
+            {
+                comparisonData[$"{weather2.City}, {weather2.Country}"] = weather2;
+            }
+
+            if (weather1 != null)
+            {
+                forecastData = await WeatherApiService.GetForecastAsync(weather1.City, weather1.Country);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error comparing cities: {ex.Message}");
+        }
+        finally
+        {
+            isComparing = false;
+        }
+    }
+}
+

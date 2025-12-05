@@ -78,6 +78,99 @@ namespace WeatherApp.Client.Services
             
             return null;
         }
+
+        public async Task<ForecastData?> GetForecastAsync(string city, string? country = null)
+        {
+            try
+            {
+                var url = country != null 
+                    ? $"api/weather/forecast/{Uri.EscapeDataString(city)}?country={Uri.EscapeDataString(country)}"
+                    : $"api/weather/forecast/{Uri.EscapeDataString(city)}";
+                
+                var response = await _httpClient.GetAsync(url);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ForecastData>();
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error ({response.StatusCode}): {errorContent}");
+                    throw new Exception(errorContent);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Network error: {ex.Message}");
+                throw new Exception("Unable to connect to the weather service. Please ensure the API is running.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching forecast: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<WeatherData?> GetWeatherByLocationAsync(double latitude, double longitude)
+        {
+            try
+            {
+                var request = new LocationRequest { Latitude = latitude, Longitude = longitude };
+                var response = await _httpClient.PostAsJsonAsync("api/weather/location", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<WeatherData>();
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error ({response.StatusCode}): {errorContent}");
+                    throw new Exception(errorContent);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Network error: {ex.Message}");
+                throw new Exception("Unable to connect to the weather service. Please ensure the API is running.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching weather by location: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<ForecastData?> GetForecastByLocationAsync(double latitude, double longitude)
+        {
+            try
+            {
+                var request = new LocationRequest { Latitude = latitude, Longitude = longitude };
+                var response = await _httpClient.PostAsJsonAsync("api/weather/forecast/location", request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ForecastData>();
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error ({response.StatusCode}): {errorContent}");
+                    throw new Exception(errorContent);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Network error: {ex.Message}");
+                throw new Exception("Unable to connect to the weather service. Please ensure the API is running.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching forecast by location: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
 

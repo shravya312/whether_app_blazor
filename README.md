@@ -13,13 +13,42 @@ A modern weather application built with Blazor WebAssembly and .NET 8 Web API, f
 
 ## ✨ Features
 
-- **User Authentication**: Sign up and sign in using Supabase Auth
+### Core Features
+- **User Authentication**: Sign up and sign in using Supabase Auth with role-based access control
 - **Weather Search**: Search weather by city name with optional country code
+- **Auto-Location Detection**: Automatic weather detection using browser geolocation API
 - **Dynamic Popular Cities**: Top 5 most searched cities displayed dynamically
-- **Real-time Weather Data**: Current weather conditions, temperature, humidity, and more
+- **Real-time Weather Data**: Current weather conditions with extended metrics (temperature, humidity, pressure, visibility, wind speed, cloudiness)
+- **5-Day Forecast**: Detailed 5-day weather forecast with hourly breakdowns
 - **Case-Insensitive Search**: Smart city name normalization
+
+### User-Specific Features
+- **Non-Registered Users**: Basic current weather info, limited city search, basic forecast view
+- **Registered Users**: 
+  - Detailed weather metrics
+  - Favorite cities management
+  - Extended forecast data
+  - Custom dashboard
+  - Weather analytics
+  - Profile management
+
+### Advanced Features
+- **Weather Alerts**: Automatic detection of severe weather conditions (extreme heat/cold, high winds, thunderstorms, heavy rain/snow)
+- **Weather Analytics**: 
+  - Temperature trend analysis
+  - Rainfall/humidity patterns
+  - City comparison tool
+  - Precipitation statistics
+- **Dark/Light Theme**: Toggle between dark and light themes with persistent storage
+- **Weather-Based UI Themes**: Dynamic color themes based on weather conditions (sunny, cloudy, rainy, stormy, snowy, foggy)
+- **Progressive Web App (PWA)**: 
+  - Offline functionality
+  - Background sync
+  - Install as desktop app
+  - Cache management
+  - Service worker for offline support
+- **Responsive Design**: Modern, clean interface built with Bootstrap with enhanced mobile support
 - **Search Statistics**: Tracks city search frequency in MongoDB
-- **Responsive UI**: Modern, clean interface built with Bootstrap
 
 ## 📁 Project Structure
 
@@ -119,9 +148,18 @@ dotnet run
 
 ### Access the Application
 
-- **Client**: http://localhost:5249
+- **Client**: http://localhost:5249 (or https://localhost:7064)
 - **API**: http://localhost:5009
 - **Swagger UI**: http://localhost:5009/swagger (when API is running)
+
+### Application Pages
+
+- **Home** (`/`): Main weather search and display page
+- **Dashboard** (`/dashboard`): Registered users' personalized dashboard with favorite cities (requires authentication)
+- **Analytics** (`/analytics`): Weather analytics and city comparison (requires authentication)
+- **Profile** (`/profile`): User profile management (requires authentication)
+- **Users** (`/users`): User information display (requires authentication)
+- **Auth** (`/auth`): Sign in/Sign up page
 
 ## 🔌 API Endpoints
 
@@ -136,6 +174,33 @@ GET /api/weather/{city}?country={countryCode}
 ```
 GET /api/weather/London
 GET /api/weather/Bangalore?country=IN
+```
+
+#### Get Weather by Location (Coordinates)
+```
+POST /api/weather/location
+Content-Type: application/json
+
+{
+  "Latitude": 51.5074,
+  "Longitude": -0.1278
+}
+```
+
+#### Get 5-Day Forecast by City
+```
+GET /api/weather/forecast/{city}?country={countryCode}
+```
+
+#### Get 5-Day Forecast by Location
+```
+POST /api/weather/forecast/location
+Content-Type: application/json
+
+{
+  "Latitude": 51.5074,
+  "Longitude": -0.1278
+}
 ```
 
 #### Search Weather (POST)
@@ -167,23 +232,44 @@ The application uses Supabase Auth for user management:
 
 - **Sign Up**: Create a new account with email and password
 - **Sign In**: Login with existing credentials
-- **Protected Routes**: Weather features require authentication
-- **User Profile**: View user information on the Users page
+- **Protected Routes**: Advanced features require authentication (Dashboard, Analytics, Profile)
+- **User Profile**: View and manage user information on the Profile page
+- **Role-Based Access**: Different features available for registered vs non-registered users
 
 ## 📊 Database Schema
 
 ### MongoDB Collections
 
 1. **WeatherData**: Stores weather information
-   - City name
-   - Temperature, humidity, pressure
-   - Weather description
+   - City name, Country
+   - Temperature, FeelsLike, Humidity, Pressure
+   - Visibility, WindSpeed, WindDirection, Cloudiness
+   - Description, MainCondition, Icon
+   - Latitude, Longitude
    - Timestamp
 
 2. **CitySearchStats**: Tracks search frequency
    - City name
    - Search count
    - Last searched timestamp
+
+### Supabase Tables
+
+**favorite_cities** (Required for favorite cities feature):
+```sql
+CREATE TABLE favorite_cities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  city TEXT NOT NULL,
+  country TEXT NOT NULL,
+  added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, city, country)
+);
+
+CREATE INDEX idx_favorite_cities_user_id ON favorite_cities(user_id);
+```
+
+**Note**: You need to create this table in your Supabase project for the favorite cities feature to work.
 
 ## 🎨 Key Features Explained
 
@@ -195,6 +281,32 @@ City names are normalized to Title Case (e.g., "bangalore" → "Bangalore") to e
 
 ### Weather Data Caching
 Weather data is stored in MongoDB to reduce API calls and improve performance.
+
+### Auto-Location Detection
+Uses browser Geolocation API to automatically detect user's location and fetch weather data. Requires user permission.
+
+### 5-Day Forecast
+Provides detailed weather forecast for the next 5 days with 3-hour intervals, including temperature ranges, precipitation, and weather conditions.
+
+### Favorite Cities
+Registered users can save favorite cities for quick access. Data is stored in Supabase and synced across devices.
+
+### Weather Alerts
+Automatically detects and displays alerts for severe weather conditions including extreme temperatures, high winds, thunderstorms, and heavy precipitation.
+
+### Weather Analytics
+Provides comprehensive analytics including:
+- Temperature trends over time
+- Humidity and precipitation patterns
+- City-to-city weather comparison
+- Statistical analysis of weather data
+
+### Progressive Web App
+The application can be installed as a PWA, works offline with cached data, and supports background sync for weather updates.
+
+### Theme System
+- Dark/Light mode toggle with persistent storage
+- Weather-based dynamic themes that change colors based on current conditions
 
 ## 🛠️ Development
 

@@ -4,9 +4,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WeatherApp.Client</title>
+    <meta name="description" content="Modern Weather Application with real-time forecasts and analytics" />
+    <meta name="theme-color" content="#0d6efd" />
+    <title>Weather App</title>
     <base href="/" />
+    <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="WeatherApp.Client.styles.css" rel="stylesheet" />
@@ -26,6 +30,9 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script src="js/geolocation.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="sw.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
