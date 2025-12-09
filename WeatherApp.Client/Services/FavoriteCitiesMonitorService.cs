@@ -225,9 +225,22 @@ namespace WeatherApp.Client.Services
                     {
                         Console.WriteLine($"[FavoriteCitiesMonitor] 🎯 Using CURRENTLY searched city: {latestCity.City}, {latestCity.Country}");
                     }
+                    else
+                    {
+                        // City not found in list - create a temporary entry for alert checking
+                        Console.WriteLine($"[FavoriteCitiesMonitor] ⚠️ City {currentCity}, {currentCountry} not found in searched cities list. Creating temporary entry.");
+                        latestCity = new SearchedCity
+                        {
+                            City = currentCity,
+                            Country = currentCountry,
+                            LastSearched = DateTime.UtcNow,
+                            SearchCount = 1
+                        };
+                        Console.WriteLine($"[FavoriteCitiesMonitor] 🎯 Using CURRENTLY searched city (temporary): {latestCity.City}, {latestCity.Country}");
+                    }
                 }
                 
-                // Fallback to most recently searched if current city not found
+                // Fallback to most recently searched if current city not provided
                 if (latestCity == null)
                 {
                     // Get the absolute most recent city by LastSearched timestamp

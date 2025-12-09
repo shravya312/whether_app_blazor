@@ -9,16 +9,19 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: linear-gradient(180deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: none;
+    justify-content: space-between;
+    height: 4rem;
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    color: white;
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
