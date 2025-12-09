@@ -140,7 +140,8 @@ namespace WeatherApp.Client.Services
                     }
                 }
                 
-                // Process OTHER cities in PARALLEL (save to history only, NO notifications) - Much faster!
+                // Process OTHER cities in PARALLEL (check only, NO history save, NO notifications)
+                // Alert history will ONLY be updated with latest city's alerts
                 var otherCities = citiesToCheck.Where(f => 
                     latestCity == null || 
                     f.City != latestCity.City || 
@@ -148,7 +149,7 @@ namespace WeatherApp.Client.Services
                 
                 if (otherCities.Any())
                 {
-                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚡ Processing {otherCities.Count} other cities in parallel for history...");
+                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚡ Checking {otherCities.Count} other cities (alerts NOT saved to history - only latest city alerts are saved)");
                     
                     var otherCitiesTasks = otherCities.Select(async favorite =>
                     {
@@ -179,21 +180,13 @@ namespace WeatherApp.Client.Services
                     // Wait for all cities to process in parallel
                     var otherCitiesResults = await Task.WhenAll(otherCitiesTasks);
                     
-                    // Collect all alerts from other cities
-                    var allOtherCityAlerts = new List<WeatherAlert>();
+                    // Collect alerts from other cities (for return value only, NOT saved to history)
                     foreach (var alerts in otherCitiesResults)
                     {
-                        allOtherCityAlerts.AddRange(alerts);
                         allAlerts.AddRange(alerts);
                     }
                     
-                    // Batch save all alerts from other cities at once (much faster and prevents race conditions)
-                    if (allOtherCityAlerts.Any())
-                    {
-                        await _alertHistoryService.SaveAlertsAsync(userId, allOtherCityAlerts);
-                    }
-                    
-                    Console.WriteLine($"[FavoriteCitiesMonitor] ✅ Completed processing {otherCities.Count} other cities");
+                    Console.WriteLine($"[FavoriteCitiesMonitor] ✅ Completed checking {otherCities.Count} other cities (alerts NOT saved to history)");
                 }
             }
             catch (Exception ex)
@@ -204,7 +197,7 @@ namespace WeatherApp.Client.Services
             return allAlerts;
         }
 
-        public async Task<List<WeatherAlert>> CheckAllCitiesAlertsAsync(string userId)
+        public async Task<List<WeatherAlert>> CheckAllCitiesAlertsAsync(string userId, string? currentCity = null, string? currentCountry = null)
         {
             var allAlerts = new List<WeatherAlert>();
             
@@ -219,11 +212,38 @@ namespace WeatherApp.Client.Services
                     return allAlerts;
                 }
 
-                // Get the latest city (most recently searched) - notifications will only be sent for this city
-                var latestCity = searchedCities.OrderByDescending(c => c.LastSearched).FirstOrDefault();
+                // Prioritize CURRENTLY searched city if provided, otherwise use most recently searched
+                SearchedCity? latestCity = null;
+                if (!string.IsNullOrEmpty(currentCity) && !string.IsNullOrEmpty(currentCountry))
+                {
+                    // Find the currently searched city in the list
+                    latestCity = searchedCities.FirstOrDefault(c => 
+                        c.City.Equals(currentCity, StringComparison.OrdinalIgnoreCase) && 
+                        c.Country.Equals(currentCountry, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (latestCity != null)
+                    {
+                        Console.WriteLine($"[FavoriteCitiesMonitor] 🎯 Using CURRENTLY searched city: {latestCity.City}, {latestCity.Country}");
+                    }
+                }
+                
+                // Fallback to most recently searched if current city not found
+                if (latestCity == null)
+                {
+                    // Get the absolute most recent city by LastSearched timestamp
+                    latestCity = searchedCities.OrderByDescending(c => c.LastSearched).FirstOrDefault();
+                    
+                    // Debug: Show top 3 most recent cities
+                    var topCities = searchedCities.OrderByDescending(c => c.LastSearched).Take(3).ToList();
+                    Console.WriteLine($"[FavoriteCitiesMonitor] 🔍 Top 3 most recent cities:");
+                    foreach (var city in topCities)
+                    {
+                        Console.WriteLine($"[FavoriteCitiesMonitor]   - {city.City}, {city.Country}: {city.LastSearched:yyyy-MM-dd HH:mm:ss.fff}");
+                    }
+                }
                 
                 Console.WriteLine($"[FavoriteCitiesMonitor] 🔍 Checking alerts for ALL {searchedCities.Count} searched cities");
-                Console.WriteLine($"[FavoriteCitiesMonitor] 📢 Notifications will be sent ONLY for latest city: {latestCity?.City}, {latestCity?.Country}");
+                Console.WriteLine($"[FavoriteCitiesMonitor] 📢 Notifications will be sent ONLY for latest city: {latestCity?.City}, {latestCity?.Country} (LastSearched: {latestCity?.LastSearched:yyyy-MM-dd HH:mm:ss.fff})");
                 
                 // Process LATEST city FIRST (for instant alert history update and notifications)
                 if (latestCity != null)
@@ -300,7 +320,8 @@ namespace WeatherApp.Client.Services
                     }
                 }
                 
-                // Process OTHER cities in PARALLEL (save to history only, NO notifications) - Much faster!
+                // Process OTHER cities in PARALLEL (check only, NO history save, NO notifications)
+                // Alert history will ONLY be updated with latest city's alerts
                 var otherCities = searchedCities.Where(c => 
                     latestCity == null || 
                     c.City != latestCity.City || 
@@ -308,7 +329,7 @@ namespace WeatherApp.Client.Services
                 
                 if (otherCities.Any())
                 {
-                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚡ Processing {otherCities.Count} other cities in parallel for history...");
+                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚡ Checking {otherCities.Count} other cities (alerts NOT saved to history - only latest city alerts are saved)");
                     
                     var otherCitiesTasks = otherCities.Select(async city =>
                     {
@@ -339,21 +360,13 @@ namespace WeatherApp.Client.Services
                     // Wait for all cities to process in parallel
                     var otherCitiesResults = await Task.WhenAll(otherCitiesTasks);
                     
-                    // Collect all alerts from other cities
-                    var allOtherCityAlerts = new List<WeatherAlert>();
+                    // Collect alerts from other cities (for return value only, NOT saved to history)
                     foreach (var alerts in otherCitiesResults)
                     {
-                        allOtherCityAlerts.AddRange(alerts);
                         allAlerts.AddRange(alerts);
                     }
                     
-                    // Batch save all alerts from other cities at once (much faster and prevents race conditions)
-                    if (allOtherCityAlerts.Any())
-                    {
-                        await _alertHistoryService.SaveAlertsAsync(userId, allOtherCityAlerts);
-                    }
-                    
-                    Console.WriteLine($"[FavoriteCitiesMonitor] ✅ Completed processing {otherCities.Count} other cities");
+                    Console.WriteLine($"[FavoriteCitiesMonitor] ✅ Completed checking {otherCities.Count} other cities (alerts NOT saved to history)");
                 }
             }
             catch (Exception ex)
