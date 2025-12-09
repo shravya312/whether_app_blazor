@@ -4,6 +4,7 @@
 @inject WeatherApiService WeatherApiService
 @inject PopularCitiesApiService PopularCitiesApiService
 @inject IpGeolocationService IpGeolocationService
+@inject GeolocationService GeolocationService
 @inject FavoriteCitiesService FavoriteCitiesService
 @inject SearchedCitiesService SearchedCitiesService
 @inject SupabaseService SupabaseService
@@ -722,37 +723,153 @@
         
         try
         {
-            Console.WriteLine("[WeatherDisplay] Starting IP-based location detection...");
+            Console.WriteLine("[WeatherDisplay] Starting location detection...");
             double latitude = 0;
             double longitude = 0;
             bool locationFound = false;
+            string locationSource = "";
             
-            // Use IP-based geolocation directly (faster and more reliable)
+            // Try browser geolocation first (more accurate)
             try
             {
-                var ipLocation = await IpGeolocationService.GetLocationByIpAsync();
-                if (ipLocation != null)
+                Console.WriteLine("[WeatherDisplay] Attempting browser geolocation...");
+                var browserLocation = await GeolocationService.GetCurrentLocationAsync();
+                if (browserLocation.HasValue && browserLocation.Value.Error == null)
                 {
-                    latitude = ipLocation.Value.Latitude;
-                    longitude = ipLocation.Value.Longitude;
+                    latitude = browserLocation.Value.Latitude;
+                    longitude = browserLocation.Value.Longitude;
                     locationFound = true;
-                    Console.WriteLine($"[WeatherDisplay] ✅ Using IP geolocation: ({latitude}, {longitude})");
+                    locationSource = "Browser GPS";
+                    Console.WriteLine($"[WeatherDisplay] ✅ Using browser geolocation: ({latitude}, {longitude})");
+                }
+                else if (browserLocation.HasValue && !string.IsNullOrEmpty(browserLocation.Value.Error))
+                {
+                    Console.WriteLine($"[WeatherDisplay] Browser geolocation denied/error: {browserLocation.Value.Error}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[WeatherDisplay] ❌ IP geolocation failed: {ex.Message}");
+                Console.WriteLine($"[WeatherDisplay] Browser geolocation failed: {ex.Message}");
+            }
+            
+            // Fallback to IP-based geolocation if browser geolocation failed
+            if (!locationFound)
+            {
+                try
+                {
+                    Console.WriteLine("[WeatherDisplay] Falling back to IP-based geolocation...");
+                    var ipLocation = await IpGeolocationService.GetLocationByIpAsync();
+                    if (ipLocation != null)
+                    {
+                        latitude = ipLocation.Value.Latitude;
+                        longitude = ipLocation.Value.Longitude;
+                        locationFound = true;
+                        locationSource = "IP Geolocation";
+                        Console.WriteLine($"[WeatherDisplay] ✅ Using IP geolocation: ({latitude}, {longitude})");
+                        
+                        // Check if IP geolocation coordinates need auto-correction for all major cities
+                        // Define major cities with their boundaries, centers, and common wrong names
+                        var cityMappings = new[]
+                        {
+                            new { City = "Bangalore", CenterLat = 12.9716, CenterLon = 77.5946, MinLat = 12.80, MaxLat = 13.15, MinLon = 77.35, MaxLon = 77.80, WrongNames = new[] { "mysore", "mysuru", "tumakuru", "tumkur" } },
+                            new { City = "Mysore", CenterLat = 12.2958, CenterLon = 76.6394, MinLat = 12.20, MaxLat = 12.40, MinLon = 76.50, MaxLon = 76.75, WrongNames = new string[0] },
+                            new { City = "Mumbai", CenterLat = 19.0760, CenterLon = 72.8777, MinLat = 18.5, MaxLat = 19.5, MinLon = 72.5, MaxLon = 73.5, WrongNames = new[] { "thane", "navi mumbai", "kalyan" } },
+                            new { City = "Delhi", CenterLat = 28.6139, CenterLon = 77.2090, MinLat = 28.3, MaxLat = 29.0, MinLon = 76.8, MaxLon = 77.5, WrongNames = new[] { "gurgaon", "gurugram", "noida", "ghaziabad", "faridabad" } },
+                            new { City = "Chennai", CenterLat = 13.0827, CenterLon = 80.2707, MinLat = 12.8, MaxLat = 13.3, MinLon = 80.0, MaxLon = 80.4, WrongNames = new[] { "madras" } },
+                            new { City = "Hyderabad", CenterLat = 17.3850, CenterLon = 78.4867, MinLat = 17.2, MaxLat = 17.6, MinLon = 78.2, MaxLon = 78.7, WrongNames = new[] { "secunderabad" } },
+                            new { City = "Kolkata", CenterLat = 22.5726, CenterLon = 88.3639, MinLat = 22.4, MaxLat = 22.7, MinLon = 88.2, MaxLon = 88.5, WrongNames = new[] { "calcutta", "howrah" } },
+                            new { City = "Pune", CenterLat = 18.5204, CenterLon = 73.8567, MinLat = 18.3, MaxLat = 18.7, MinLon = 73.6, MaxLon = 74.0, WrongNames = new[] { "pimpri", "chinchwad" } },
+                            new { City = "New York", CenterLat = 40.7128, CenterLon = -74.0060, MinLat = 40.4, MaxLat = 40.9, MinLon = -74.3, MaxLon = -73.7, WrongNames = new[] { "newark", "jersey city", "yonkers" } },
+                            new { City = "London", CenterLat = 51.5074, CenterLon = -0.1278, MinLat = 51.3, MaxLat = 51.7, MinLon = -0.5, MaxLon = 0.3, WrongNames = new[] { "westminster", "greenwich", "camden" } },
+                            new { City = "Tokyo", CenterLat = 35.6762, CenterLon = 139.6503, MinLat = 35.4, MaxLat = 35.9, MinLon = 139.4, MaxLon = 139.9, WrongNames = new[] { "shibuya", "shinjuku", "chiyoda" } },
+                            new { City = "Sydney", CenterLat = -33.8688, CenterLon = 151.2093, MinLat = -34.0, MaxLat = -33.7, MinLon = 150.9, MaxLon = 151.3, WrongNames = new[] { "parramatta", "north sydney" } },
+                            new { City = "Dubai", CenterLat = 25.2048, CenterLon = 55.2708, MinLat = 24.8, MaxLat = 25.4, MinLon = 55.0, MaxLon = 55.5, WrongNames = new[] { "sharjah", "ajman" } }
+                        };
+                        
+                        // Check if coordinates are in a "wrong city" boundaries but closer to a major city
+                        // Example: IP returns Mysore coordinates but user is actually in Bangalore
+                        string? correctedCity = null;
+                        double correctedLat = latitude;
+                        double correctedLon = longitude;
+                        
+                        foreach (var city in cityMappings)
+                        {
+                            // Check if coordinates are in this city's boundaries
+                            bool isInCityBoundaries = latitude >= city.MinLat && latitude <= city.MaxLat &&
+                                                      longitude >= city.MinLon && longitude <= city.MaxLon;
+                            
+                            if (isInCityBoundaries)
+                            {
+                                // Coordinates are in correct city boundaries - no correction needed
+                                Console.WriteLine($"[WeatherDisplay] ✅ Coordinates ({latitude}, {longitude}) are in {city.City} boundaries");
+                                break;
+                            }
+                            
+                            // Check if coordinates are in a "wrong city" that's in this city's wrong names list
+                            foreach (var wrongCity in cityMappings)
+                            {
+                                if (wrongCity.City == city.City) continue;
+                                
+                                // Check if coordinates are in wrong city boundaries
+                                bool isInWrongCityBoundaries = latitude >= wrongCity.MinLat && latitude <= wrongCity.MaxLat &&
+                                                               longitude >= wrongCity.MinLon && longitude <= wrongCity.MaxLon;
+                                
+                                // Check if wrong city is in the correct city's wrong names list
+                                bool isWrongCityName = city.WrongNames.Any(wrong => wrongCity.City.ToLower().Contains(wrong.ToLower()) || 
+                                                                                    wrong.Contains(wrongCity.City.ToLower()));
+                                
+                                if (isInWrongCityBoundaries && isWrongCityName)
+                                {
+                                    // Calculate distances from both cities
+                                    var distanceFromCorrectCity = Math.Sqrt(Math.Pow(latitude - city.CenterLat, 2) + Math.Pow(longitude - city.CenterLon, 2));
+                                    var distanceFromWrongCity = Math.Sqrt(Math.Pow(latitude - wrongCity.CenterLat, 2) + Math.Pow(longitude - wrongCity.CenterLon, 2));
+                                    
+                                    // If coordinates are closer to correct city and within reasonable distance, auto-correct
+                                    if (distanceFromCorrectCity < distanceFromWrongCity && distanceFromCorrectCity < 1.0) // Within ~111km
+                                    {
+                                        var distanceKm = distanceFromCorrectCity * 111;
+                                        Console.WriteLine($"[WeatherDisplay] ⚠️ WARNING: IP geolocation returned {wrongCity.City} coordinates ({latitude}, {longitude})");
+                                        Console.WriteLine($"[WeatherDisplay] ⚠️ But you might be in {city.City} (distance: {distanceKm:F0} km from {city.City} center)");
+                                        Console.WriteLine($"[WeatherDisplay] ⚠️ IP geolocation is often inaccurate - auto-correcting to {city.City} coordinates");
+                                        
+                                        correctedCity = city.City;
+                                        correctedLat = city.CenterLat;
+                                        correctedLon = city.CenterLon;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (correctedCity != null) break;
+                        }
+                        
+                        // Apply correction if needed
+                        if (correctedCity != null)
+                        {
+                            latitude = correctedLat;
+                            longitude = correctedLon;
+                            locationSource = $"IP Geolocation (Auto-corrected to {correctedCity})";
+                            Console.WriteLine($"[WeatherDisplay] ✅ Auto-corrected to {correctedCity} coordinates: ({latitude}, {longitude})");
+                            errorMessage = $"IP geolocation detected incorrect city, but auto-corrected to {correctedCity}. " +
+                                         $"For more accurate results, please allow browser location access when clicking 'Use My Location'.";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[WeatherDisplay] ❌ IP geolocation failed: {ex.Message}");
+                }
             }
             
             if (!locationFound)
             {
-                Console.WriteLine("[WeatherDisplay] ❌ IP geolocation failed");
-                errorMessage = "Unable to get your location. Please search for your city manually.";
+                Console.WriteLine("[WeatherDisplay] ❌ All location methods failed");
+                errorMessage = "Unable to get your location. Please allow browser location access or search for your city manually.";
                 isLoadingLocation = false;
                 return;
             }
             
-            Console.WriteLine($"[WeatherDisplay] Location obtained via: IP-based Geolocation");
+            Console.WriteLine($"[WeatherDisplay] Location obtained via: {locationSource}");
             Console.WriteLine($"[WeatherDisplay] Final coordinates: Latitude={latitude}, Longitude={longitude}");
 
             currentWeather = await WeatherApiService.GetWeatherByLocationAsync(latitude, longitude);

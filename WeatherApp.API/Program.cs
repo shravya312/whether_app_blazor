@@ -34,6 +34,9 @@ builder.Services.AddSingleton<MongoDbService>();
 // Weather Service
 builder.Services.AddScoped<WeatherService>();
 
+// Email Service
+builder.Services.AddScoped<EmailService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

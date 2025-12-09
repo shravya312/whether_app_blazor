@@ -78,12 +78,10 @@ publish/
 
 ## Sensitive Configuration Files
 # DO NOT COMMIT files with secrets
+appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 *.secrets.json
-
-# Keep template (without actual secrets)
-!appsettings.json
 
 ## Environment Variables
 .env

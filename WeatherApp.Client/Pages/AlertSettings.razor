@@ -112,22 +112,25 @@
                             <h6 class="mb-3">Monitored Cities</h6>
                             <div class="alert alert-info">
                                 <p class="mb-0">
-                                    <strong>All cities are monitored by default.</strong> The system automatically tracks all cities you search for and checks them for weather alerts.
+                                    <strong>✅ Email notifications work for ALL cities you search.</strong> The system automatically checks all cities for weather alerts and sends email notifications when alerts trigger.
                                 </p>
                                 <p class="mb-0 mt-2">
-                                    <small>You can optionally select specific favorite cities to prioritize monitoring, or leave empty to monitor all searched cities.</small>
+                                    <small>Below, you can select specific favorite cities to prioritize. <strong>All new cities are checked by default</strong> - they will receive email alerts automatically.</small>
                                 </p>
                             </div>
                             
                             @if (favoriteCities.Any())
                             {
-                                <p class="text-muted mt-3">Select specific favorite cities to prioritize (all are monitored by default):</p>
+                                <p class="text-muted mt-3">Select specific favorite cities to monitor (all are checked by default):</p>
                                 <div class="mb-3">
                                     @foreach (var city in favoriteCities)
                                     {
                                         var cityKey = $"{city.City}, {city.Country}";
-                                        // Default to true (monitored) if not explicitly unchecked
-                                        var isMonitored = !settings.MonitoredCities.Any() || settings.MonitoredCities.Contains(cityKey);
+                                        // Default to true (monitored/checked) - all cities checked by default
+                                        // If MonitoredCities is empty, all are monitored. Otherwise check if city is in list.
+                                        var isMonitored = settings.MonitoredCities == null || 
+                                                         !settings.MonitoredCities.Any() || 
+                                                         settings.MonitoredCities.Contains(cityKey);
                                         <div class="form-check mb-2">
                                             <input type="checkbox" class="form-check-input" 
                                                    checked="@isMonitored"
@@ -188,18 +191,34 @@
     protected override async Task OnInitializedAsync()
     {
         var user = SupabaseService.GetCurrentUser();
-        if (user != null)
+        if (user != null && !string.IsNullOrEmpty(user.Id))
         {
             currentUserId = user.Id;
             settings = await AlertSettingsService.GetAlertSettingsAsync(currentUserId);
             favoriteCities = await FavoriteCitiesService.GetFavoriteCitiesAsync(currentUserId);
             
-            // If no monitored cities are set, default to all favorite cities
-            if (!settings.MonitoredCities.Any() && favoriteCities.Any())
+            // Initialize MonitoredCities if null
+            if (settings.MonitoredCities == null)
             {
-                settings.MonitoredCities = favoriteCities
-                    .Select(f => $"{f.City}, {f.Country}")
-                    .ToList();
+                settings.MonitoredCities = new List<string>();
+            }
+            
+            // Always ensure all favorite cities are in MonitoredCities by default (checked)
+            // Add any new favorite cities that aren't in the monitored list
+            foreach (var favorite in favoriteCities)
+            {
+                var cityKey = $"{favorite.City}, {favorite.Country}";
+                if (!settings.MonitoredCities.Contains(cityKey))
+                {
+                    settings.MonitoredCities.Add(cityKey);
+                }
+            }
+            
+            // Save updated settings if we added new cities
+            if (favoriteCities.Any())
+            {
+                settings.UserId = currentUserId;
+                await AlertSettingsService.SaveAlertSettingsAsync(settings);
             }
         }
         isLoading = false;

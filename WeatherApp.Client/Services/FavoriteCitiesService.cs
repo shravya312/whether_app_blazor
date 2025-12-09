@@ -1,6 +1,7 @@
 using WeatherApp.Client.Models;
 using Microsoft.JSInterop;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WeatherApp.Client.Services
 {
@@ -66,12 +67,50 @@ namespace WeatherApp.Client.Services
                 var key = $"{StorageKey}_{userId}";
                 var json = JsonSerializer.Serialize(favorites);
                 await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, json);
+                
+                // Automatically add new city to monitored cities (checked by default)
+                await AddCityToMonitoredCitiesAsync(userId, city, country);
+                
                 return true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error adding favorite city: {ex.Message}");
                 return false;
+            }
+        }
+        
+        private async Task AddCityToMonitoredCitiesAsync(string userId, string city, string country)
+        {
+            try
+            {
+                var alertSettingsKey = $"alert_settings_{userId}";
+                var settingsJson = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", alertSettingsKey);
+                
+                if (!string.IsNullOrEmpty(settingsJson))
+                {
+                    var settings = JsonSerializer.Deserialize<AlertSettings>(settingsJson);
+                    if (settings != null)
+                    {
+                        if (settings.MonitoredCities == null)
+                        {
+                            settings.MonitoredCities = new List<string>();
+                        }
+                        
+                        var cityKey = $"{city}, {country}";
+                        if (!settings.MonitoredCities.Contains(cityKey))
+                        {
+                            settings.MonitoredCities.Add(cityKey);
+                            var updatedJson = JsonSerializer.Serialize(settings);
+                            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", alertSettingsKey, updatedJson);
+                            Console.WriteLine($"[FavoriteCitiesService] ✅ Auto-added {cityKey} to monitored cities");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FavoriteCitiesService] Error adding city to monitored cities: {ex.Message}");
             }
         }
 
@@ -167,6 +206,9 @@ namespace WeatherApp.Client.Services
                         SearchCount = 1,
                         LastSearched = DateTime.UtcNow
                     });
+                    
+                    // Automatically add new city to monitored cities (checked by default)
+                    await AddCityToMonitoredCitiesAsync(userId, city, country);
                 }
 
                 var updatedJson = JsonSerializer.Serialize(favorites);

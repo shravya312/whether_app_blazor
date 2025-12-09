@@ -4,6 +4,7 @@
 @inject AlertSettingsService? AlertSettingsService
 @inject AlertHistoryService? AlertHistoryService
 @inject SupabaseService SupabaseService
+@inject EmailNotificationService? EmailNotificationService
 @inject IJSRuntime JSRuntime
 
 @using static WeatherApp.Client.Services.WeatherAlertsService
@@ -47,13 +48,14 @@
 
     private List<WeatherAlert> alerts = new();
     private HashSet<string> dismissedAlertIds = new();
+    private HashSet<string> emailsSentForAlerts = new(); // Track alerts that have already triggered emails
     private AlertSettings? alertSettings;
     private string? currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
         var user = SupabaseService.GetCurrentUser();
-        if (user != null && AlertSettingsService != null)
+        if (user != null && AlertSettingsService != null && !string.IsNullOrEmpty(user.Id))
         {
             currentUserId = user.Id;
             alertSettings = await AlertSettingsService.GetAlertSettingsAsync(currentUserId);
@@ -79,15 +81,65 @@
             // Save alerts to history and show notifications
             if (AlertHistoryService != null && currentUserId != null)
             {
+                // Get the latest alert (most recent timestamp) for email notification
+                var latestAlert = alerts.OrderByDescending(a => a.Timestamp).FirstOrDefault();
+                
+                // Process all alerts: save to history and show browser notifications
                 foreach (var alert in alerts)
                 {
                     await AlertHistoryService.SaveAlertAsync(currentUserId, alert);
                     
-                    // Show browser notification if enabled
+                    // Show browser notification if enabled (for all alerts)
                     if (alertSettings?.EnablePushNotifications == true)
                     {
                         await ShowNotification(alert);
                     }
+                }
+                
+                // Send email notification ONLY for the latest alert (ONCE per alert cycle)
+                if (alertSettings?.EnableEmailNotifications == true && 
+                    EmailNotificationService != null && 
+                    latestAlert != null &&
+                    !emailsSentForAlerts.Contains(latestAlert.Id)) // Only send if not already sent
+                {
+                    Console.WriteLine($"[WeatherAlerts] 📧 Email notifications enabled - preparing to send email for LATEST alert only");
+                    var user = SupabaseService.GetCurrentUser();
+                    if (user?.Email != null)
+                    {
+                        Console.WriteLine($"[WeatherAlerts] 📧 User email found: {user.Email}");
+                        Console.WriteLine($"[WeatherAlerts] 📧 Sending email for LATEST alert: {latestAlert.Type} in {latestAlert.City} (Timestamp: {latestAlert.Timestamp})");
+                        var emailSent = await EmailNotificationService.SendWeatherAlertEmailAsync(
+                            user.Email,
+                            latestAlert.City,
+                            latestAlert.Country,
+                            latestAlert.Message,
+                            latestAlert.Type.ToString()
+                        );
+                        if (emailSent)
+                        {
+                            // Mark this alert as having sent email
+                            emailsSentForAlerts.Add(latestAlert.Id);
+                            Console.WriteLine($"[WeatherAlerts] ✅ Email sent successfully to {user.Email} for latest alert (ID: {latestAlert.Id})");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[WeatherAlerts] ❌ Failed to send email to {user.Email}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[WeatherAlerts] ⚠️ User email is null - cannot send email");
+                    }
+                }
+                
+                // Log if email notifications are disabled
+                if (alertSettings?.EnableEmailNotifications != true && alerts.Any())
+                {
+                    Console.WriteLine($"[WeatherAlerts] ⚠️ Email notifications are disabled in settings");
+                }
+                if (EmailNotificationService == null && alerts.Any())
+                {
+                    Console.WriteLine($"[WeatherAlerts] ⚠️ EmailNotificationService is not available");
                 }
             }
         }

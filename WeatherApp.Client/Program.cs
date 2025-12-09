@@ -33,6 +33,7 @@ try
     builder.Services.AddScoped<AlertHistoryService>();
     builder.Services.AddScoped<WeatherAlertsService>();
     builder.Services.AddScoped<SearchedCitiesService>();
+    builder.Services.AddScoped<EmailNotificationService>();
     builder.Services.AddScoped<FavoriteCitiesMonitorService>();
 
     // Add Authorization

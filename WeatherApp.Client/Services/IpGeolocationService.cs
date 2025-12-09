@@ -17,37 +17,71 @@ namespace WeatherApp.Client.Services
             try
             {
                 Console.WriteLine("[IpGeolocationService] Attempting to get location by IP address...");
-                // Using ipapi.co free service (no API key required for basic usage)
-                var response = await _httpClient.GetAsync("https://ipapi.co/json/");
                 
-                if (response.IsSuccessStatusCode)
+                // Try multiple IP geolocation services for better accuracy
+                // Prioritize services that are more accurate for India/Asia region
+                var services = new[]
                 {
-                    var data = await response.Content.ReadFromJsonAsync<IpLocationResponse>();
-                    if (data != null && data.Latitude.HasValue && data.Longitude.HasValue)
+                    "https://ipapi.co/json/",           // Good accuracy for India
+                    "https://ip-api.com/json/",         // Free tier, decent accuracy
+                    "https://ipgeolocation.io/json/",   // Good for Asia region
+                    "https://geojs.io/geo.json",        // Lightweight, good accuracy
+                    "https://freeipapi.com/api/json/"   // Fallback
+                };
+                
+                foreach (var serviceUrl in services)
+                {
+                    try
                     {
-                        Console.WriteLine($"[IpGeolocationService] ✅ IP geolocation SUCCESS!");
-                        Console.WriteLine($"[IpGeolocationService] Latitude: {data.Latitude.Value}");
-                        Console.WriteLine($"[IpGeolocationService] Longitude: {data.Longitude.Value}");
-                        Console.WriteLine($"[IpGeolocationService] Coordinates: ({data.Latitude.Value}, {data.Longitude.Value})");
-                        if (!string.IsNullOrEmpty(data.City))
+                        Console.WriteLine($"[IpGeolocationService] Trying service: {serviceUrl}");
+                        var response = await _httpClient.GetAsync(serviceUrl);
+                        
+                        if (response.IsSuccessStatusCode)
                         {
-                            Console.WriteLine($"[IpGeolocationService] City: {data.City}");
+                            var json = await response.Content.ReadAsStringAsync();
+                            var data = await response.Content.ReadFromJsonAsync<IpLocationResponse>();
+                            
+                            if (data != null && data.Latitude.HasValue && data.Longitude.HasValue)
+                            {
+                                var lat = data.Latitude.Value;
+                                var lon = data.Longitude.Value;
+                                
+                                Console.WriteLine($"[IpGeolocationService] ✅ IP geolocation SUCCESS!");
+                                Console.WriteLine($"[IpGeolocationService] Latitude: {lat}");
+                                Console.WriteLine($"[IpGeolocationService] Longitude: {lon}");
+                                Console.WriteLine($"[IpGeolocationService] Coordinates: ({lat}, {lon})");
+                                
+                                if (!string.IsNullOrEmpty(data.City))
+                                {
+                                    Console.WriteLine($"[IpGeolocationService] City: {data.City}");
+                                }
+                                
+                                // Check if coordinates are suspiciously far from expected location
+                                // Bangalore area: ~12.97°N, 77.59°E
+                                // If IP geolocation gives coordinates far from user's expected location, log warning
+                                var bangaloreLat = 12.9716;
+                                var bangaloreLon = 77.5946;
+                                var distanceFromBangalore = Math.Sqrt(Math.Pow(lat - bangaloreLat, 2) + Math.Pow(lon - bangaloreLon, 2));
+                                
+                                if (distanceFromBangalore > 0.5) // More than ~55km from Bangalore
+                                {
+                                    Console.WriteLine($"[IpGeolocationService] ⚠️ WARNING: IP geolocation may be inaccurate!");
+                                    Console.WriteLine($"[IpGeolocationService] ⚠️ Coordinates ({lat}, {lon}) are {distanceFromBangalore:F2} degrees (~{distanceFromBangalore * 111:F0} km) from Bangalore center");
+                                    Console.WriteLine($"[IpGeolocationService] ⚠️ Consider using browser geolocation for more accurate results");
+                                }
+                                
+                                return (lat, lon);
+                            }
                         }
-                        if (!string.IsNullOrEmpty(data.Country))
-                        {
-                            Console.WriteLine($"[IpGeolocationService] Country: {data.Country}");
-                        }
-                        return (data.Latitude.Value, data.Longitude.Value);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Console.WriteLine("[IpGeolocationService] ❌ IP geolocation failed - invalid response data");
+                        Console.WriteLine($"[IpGeolocationService] Service {serviceUrl} failed: {ex.Message}");
+                        continue; // Try next service
                     }
                 }
-                else
-                {
-                    Console.WriteLine($"[IpGeolocationService] ❌ IP geolocation failed - HTTP {response.StatusCode}");
-                }
+                
+                Console.WriteLine("[IpGeolocationService] ❌ All IP geolocation services failed");
             }
             catch (Exception ex)
             {
