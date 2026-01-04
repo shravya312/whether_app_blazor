@@ -37,6 +37,9 @@ builder.Services.AddScoped<WeatherService>();
 // Email Service
 builder.Services.AddScoped<EmailService>();
 
+// Push Notification Service
+builder.Services.AddSingleton<PushNotificationService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -58,4 +61,17 @@ app.UseRouting();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Microsoft.AspNetCore.Connections.AddressInUseException ex)
+{
+    Console.WriteLine($"\n\nERROR: The API port is already in use. Please ensure no other instance of the API is running or change the port.\nDetails: {ex.Message}\n\n");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"\n\nFATAL API ERROR: {ex.Message}\nStack Trace: {ex.StackTrace}\n\n");
+}
+
+public partial class Program { } // Made public for integration tests

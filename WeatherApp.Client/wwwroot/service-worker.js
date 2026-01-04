@@ -118,3 +118,91 @@ self.addEventListener('periodicsync', (event) => {
   }
 });
 
+// Push event - handle push notifications (works even when app is closed)
+self.addEventListener('push', (event) => {
+  console.log('Push notification received:', event);
+  
+  let notificationData = {
+    title: 'Weather Alert',
+    body: 'You have a new weather alert',
+    icon: '/favicon.ico',
+    badge: '/icon-192.png',
+    tag: 'weather-alert',
+    requireInteraction: true,
+    data: {}
+  };
+
+  // Parse push data if available
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = {
+        title: data.title || 'Weather Alert',
+        body: data.body || data.message || 'You have a new weather alert',
+        icon: data.icon || '/favicon.ico',
+        badge: '/icon-192.png',
+        tag: data.tag || data.id || 'weather-alert',
+        requireInteraction: true,
+        data: data.data || {},
+        actions: data.actions || []
+      };
+    } catch (e) {
+      // If not JSON, try text
+      const text = event.data.text();
+      if (text) {
+        notificationData.body = text;
+      }
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag,
+      requireInteraction: notificationData.requireInteraction,
+      data: notificationData.data,
+      actions: notificationData.actions,
+      vibrate: [200, 100, 200],
+      timestamp: Date.now()
+    })
+  );
+});
+
+// Notification click event - handle when user clicks notification
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
+  
+  event.notification.close();
+
+  // Get notification data
+  const notificationData = event.notification.data || {};
+  const urlToOpen = notificationData.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // Check if there's already a window open
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Notification close event
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event);
+});
+

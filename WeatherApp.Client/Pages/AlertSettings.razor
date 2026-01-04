@@ -5,6 +5,7 @@
 @inject AlertSettingsService AlertSettingsService
 @inject SupabaseService SupabaseService
 @inject FavoriteCitiesService FavoriteCitiesService
+@inject PushNotificationService PushNotificationService
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Alert Settings - Weather App</PageTitle>
@@ -93,10 +94,32 @@
                             
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" @bind="settings.EnablePushNotifications" />
-                                    <label class="form-check-label">Enable Browser Push Notifications</label>
+                                    <input type="checkbox" class="form-check-input" checked="@settings.EnablePushNotifications" @onchange="OnPushNotificationToggle" />
+                                    <label class="form-check-label">Enable Web Push Notifications (Background)</label>
                                 </div>
-                                <small class="text-muted">Receive alerts as browser notifications</small>
+                                <small class="text-muted">Receive alerts even when app is closed (requires subscription)</small>
+                                @if (pushSubscriptionStatus != null)
+                                {
+                                    <div class="mt-2">
+                                        @{
+                                            var badgeClass = pushSubscriptionStatus == "subscribed" ? "bg-success" : "bg-warning";
+                                        }
+                                        <span class="badge @badgeClass">
+                                            @if (pushSubscriptionStatus == "subscribed")
+                                            {
+                                                <i class="bi bi-check-circle"></i> <text>Subscribed</text>
+                                            }
+                                            else if (pushSubscriptionStatus == "not-supported")
+                                            {
+                                                <i class="bi bi-x-circle"></i> <text>Not Supported</text>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-exclamation-triangle"></i> <text>Not Subscribed</text>
+                                            }
+                                        </span>
+                                    </div>
+                                }
                             </div>
 
                             <div class="mb-3">
@@ -145,7 +168,7 @@
                                 <p class="text-muted">No favorite cities yet. All cities you search will be automatically monitored for alerts.</p>
                             }
 
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <button type="submit" class="btn btn-primary" disabled="@isSaving">
                                     @if (isSaving)
                                     {
@@ -156,6 +179,26 @@
                                 <button type="button" class="btn btn-outline-secondary" @onclick="RequestNotificationPermission">
                                     Request Notification Permission
                                 </button>
+                                @if (settings.EnablePushNotifications && pushSubscriptionStatus != "subscribed")
+                                {
+                                    <button type="button" class="btn btn-outline-primary" @onclick="SubscribeToPush" disabled="@isSubscribing">
+                                        @if (isSubscribing)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        Subscribe to Push
+                                    </button>
+                                }
+                                @if (pushSubscriptionStatus == "subscribed")
+                                {
+                                    <button type="button" class="btn btn-outline-danger" @onclick="UnsubscribeFromPush" disabled="@isUnsubscribing">
+                                        @if (isUnsubscribing)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                        }
+                                        Unsubscribe
+                                    </button>
+                                }
                             </div>
                         </EditForm>
 
@@ -180,6 +223,9 @@
     private string? saveMessage;
     private bool saveSuccess;
     private string? currentUserId;
+    private string? pushSubscriptionStatus;
+    private bool isSubscribing = false;
+    private bool isUnsubscribing = false;
     
     // Helper properties for nullable bindings
     private double? maxTemp { get => settings.MaxTemperature; set => settings.MaxTemperature = value; }
@@ -220,8 +266,117 @@
                 settings.UserId = currentUserId;
                 await AlertSettingsService.SaveAlertSettingsAsync(settings);
             }
+
+            // Check push subscription status
+            await CheckPushSubscriptionStatus();
         }
         isLoading = false;
+    }
+
+    private async Task CheckPushSubscriptionStatus()
+    {
+        try
+        {
+            var isSupported = await PushNotificationService.IsSupportedAsync();
+            if (!isSupported)
+            {
+                pushSubscriptionStatus = "not-supported";
+                return;
+            }
+
+            var subscription = await PushNotificationService.GetSubscriptionAsync();
+            pushSubscriptionStatus = subscription != null ? "subscribed" : "not-subscribed";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking push subscription: {ex.Message}");
+            pushSubscriptionStatus = "error";
+        }
+    }
+
+    private async Task OnPushNotificationToggle(ChangeEventArgs e)
+    {
+        var isChecked = e.Value?.ToString() == "True";
+        settings.EnablePushNotifications = isChecked;
+        
+        if (isChecked)
+        {
+            // Check if already subscribed
+            await CheckPushSubscriptionStatus();
+        }
+    }
+
+    private async Task SubscribeToPush()
+    {
+        if (string.IsNullOrEmpty(currentUserId)) return;
+
+        isSubscribing = true;
+        try
+        {
+            // Request permission first
+            var permissionGranted = await PushNotificationService.RequestPermissionAsync();
+            if (!permissionGranted)
+            {
+                saveMessage = "Notification permission denied. Please enable notifications in your browser settings.";
+                saveSuccess = false;
+                return;
+            }
+
+            // Subscribe
+            var subscription = await PushNotificationService.SubscribeAsync(currentUserId);
+            if (subscription != null)
+            {
+                pushSubscriptionStatus = "subscribed";
+                saveMessage = "Successfully subscribed to push notifications! You'll receive alerts even when the app is closed.";
+                saveSuccess = true;
+            }
+            else
+            {
+                saveMessage = "Failed to subscribe to push notifications. Please try again.";
+                saveSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            saveMessage = $"Error subscribing: {ex.Message}";
+            saveSuccess = false;
+        }
+        finally
+        {
+            isSubscribing = false;
+        }
+    }
+
+    private async Task UnsubscribeFromPush()
+    {
+        if (string.IsNullOrEmpty(currentUserId)) return;
+
+        isUnsubscribing = true;
+        try
+        {
+            var success = await PushNotificationService.UnsubscribeAsync(currentUserId);
+            if (success)
+            {
+                pushSubscriptionStatus = "not-subscribed";
+                settings.EnablePushNotifications = false;
+                saveMessage = "Successfully unsubscribed from push notifications.";
+                saveSuccess = true;
+            }
+            else
+            {
+                saveMessage = "Failed to unsubscribe. Please try again.";
+                saveSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            saveMessage = $"Error unsubscribing: {ex.Message}";
+            saveSuccess = false;
+        }
+        finally
+        {
+            isUnsubscribing = false;
+        }
     }
 
     private async Task SaveSettings()

@@ -13,6 +13,7 @@
     <PackageReference Include="supabase-csharp" Version="0.16.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
+    <PackageReference Include="WebPush" Version="1.0.11" />
   </ItemGroup>
 
 </Project>

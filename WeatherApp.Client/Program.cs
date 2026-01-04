@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.JSInterop;
 using WeatherApp.Client;
 using WeatherApp.Client.Services;
 using Supabase;
@@ -34,7 +35,30 @@ try
     builder.Services.AddScoped<WeatherAlertsService>();
     builder.Services.AddScoped<SearchedCitiesService>();
     builder.Services.AddScoped<EmailNotificationService>();
-    builder.Services.AddScoped<FavoriteCitiesMonitorService>();
+    builder.Services.AddScoped<FavoriteCitiesMonitorService>(provider =>
+    {
+        var weatherApi = provider.GetRequiredService<WeatherApiService>();
+        var alerts = provider.GetRequiredService<WeatherAlertsService>();
+        var alertSettings = provider.GetRequiredService<AlertSettingsService>();
+        var alertHistory = provider.GetRequiredService<AlertHistoryService>();
+        var favorites = provider.GetRequiredService<FavoriteCitiesService>();
+        var searched = provider.GetRequiredService<SearchedCitiesService>();
+        var jsRuntime = provider.GetRequiredService<IJSRuntime>();
+        var email = provider.GetService<EmailNotificationService>();
+        var supabase = provider.GetService<SupabaseService>();
+        var httpClient = provider.GetService<HttpClient>();
+        var config = provider.GetService<IConfiguration>();
+        
+        return new FavoriteCitiesMonitorService(
+            weatherApi, alerts, alertSettings, alertHistory, favorites, searched, jsRuntime, email, supabase, httpClient, config);
+    });
+    builder.Services.AddScoped<PushNotificationService>(provider =>
+    {
+        var jsRuntime = provider.GetRequiredService<IJSRuntime>();
+        var httpClient = provider.GetRequiredService<HttpClient>();
+        var config = provider.GetRequiredService<IConfiguration>();
+        return new PushNotificationService(jsRuntime, httpClient, config);
+    });
 
     // Add Authorization
     builder.Services.AddAuthorizationCore();

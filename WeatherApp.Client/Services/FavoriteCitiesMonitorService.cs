@@ -1,6 +1,8 @@
 using WeatherApp.Client.Models;
 using WeatherApp.Client.Services;
 using Microsoft.JSInterop;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http.Json;
 
 namespace WeatherApp.Client.Services
 {
@@ -14,6 +16,8 @@ namespace WeatherApp.Client.Services
         private readonly SearchedCitiesService _searchedCitiesService;
         private readonly EmailNotificationService? _emailNotificationService;
         private readonly SupabaseService? _supabaseService;
+        private readonly HttpClient? _httpClient;
+        private readonly IConfiguration? _configuration;
         private readonly IJSRuntime _jsRuntime;
         private readonly HashSet<string> _emailsSentForAlerts = new(); // Track alerts that have already triggered emails
 
@@ -26,7 +30,9 @@ namespace WeatherApp.Client.Services
             SearchedCitiesService searchedCitiesService,
             IJSRuntime jsRuntime,
             EmailNotificationService? emailNotificationService = null,
-            SupabaseService? supabaseService = null)
+            SupabaseService? supabaseService = null,
+            HttpClient? httpClient = null,
+            IConfiguration? configuration = null)
         {
             _weatherApiService = weatherApiService;
             _alertsService = alertsService;
@@ -37,6 +43,8 @@ namespace WeatherApp.Client.Services
             _jsRuntime = jsRuntime;
             _emailNotificationService = emailNotificationService;
             _supabaseService = supabaseService;
+            _httpClient = httpClient;
+            _configuration = configuration;
         }
 
         public async Task<List<WeatherAlert>> CheckFavoriteCitiesAlertsAsync(string userId)
@@ -99,6 +107,37 @@ namespace WeatherApp.Client.Services
                                 if (settings.EnablePushNotifications)
                                 {
                                     await ShowNotification(alert);
+                                }
+                            }
+                            
+                            // Send push notification via backend API (works even when app is closed)
+                            if (settings.EnablePushNotifications && latestAlert != null && _httpClient != null && _configuration != null)
+                            {
+                                try
+                                {
+                                    var apiBaseUrl = _configuration["ApiBaseUrl"] ?? "http://localhost:5009";
+                                    await _httpClient.PostAsJsonAsync(
+                                        $"{apiBaseUrl}/api/push/send",
+                                        new
+                                        {
+                                            UserId = userId,
+                                            Title = $"{latestAlert.Type} Alert - {latestAlert.City}",
+                                            Body = latestAlert.Message,
+                                            Icon = "/favicon.ico",
+                                            Data = new Dictionary<string, object>
+                                            {
+                                                { "type", "weather-alert" },
+                                                { "alertType", latestAlert.Type.ToString() },
+                                                { "city", latestAlert.City },
+                                                { "message", latestAlert.Message },
+                                                { "url", "/" }
+                                            }
+                                        });
+                                    Console.WriteLine($"[FavoriteCitiesMonitor] 📱 Push notification sent for alert: {latestAlert.Type} in {latestAlert.City}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚠️ Error sending push notification: {ex.Message}");
                                 }
                             }
                             
@@ -292,6 +331,37 @@ namespace WeatherApp.Client.Services
                                 if (settings.EnablePushNotifications)
                                 {
                                     await ShowNotification(alert);
+                                }
+                            }
+                            
+                            // Send push notification via backend API (works even when app is closed)
+                            if (settings.EnablePushNotifications && latestAlert != null && _httpClient != null && _configuration != null)
+                            {
+                                try
+                                {
+                                    var apiBaseUrl = _configuration["ApiBaseUrl"] ?? "http://localhost:5009";
+                                    await _httpClient.PostAsJsonAsync(
+                                        $"{apiBaseUrl}/api/push/send",
+                                        new
+                                        {
+                                            UserId = userId,
+                                            Title = $"{latestAlert.Type} Alert - {latestAlert.City}",
+                                            Body = latestAlert.Message,
+                                            Icon = "/favicon.ico",
+                                            Data = new Dictionary<string, object>
+                                            {
+                                                { "type", "weather-alert" },
+                                                { "alertType", latestAlert.Type.ToString() },
+                                                { "city", latestAlert.City },
+                                                { "message", latestAlert.Message },
+                                                { "url", "/" }
+                                            }
+                                        });
+                                    Console.WriteLine($"[FavoriteCitiesMonitor] 📱 Push notification sent for alert: {latestAlert.Type} in {latestAlert.City}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[FavoriteCitiesMonitor] ⚠️ Error sending push notification: {ex.Message}");
                                 }
                             }
                             
