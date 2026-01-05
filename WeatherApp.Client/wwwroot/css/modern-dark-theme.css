@@ -29,6 +29,11 @@ html, body {
     padding: 0;
 }
 
+#app {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
 /* Modern Weather Widget */
 .weather-widget {
     background: var(--bg-card);
@@ -411,25 +416,25 @@ html, body {
 
 /* Form Controls */
 .form-control-modern {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 0.75rem 1rem !important;
     color: var(--text-primary) !important;
     transition: all 0.3s ease;
     font-size: 1rem;
 }
 
 .form-control-modern:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: var(--accent-primary);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--accent-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
     color: var(--text-primary) !important;
 }
 
 .form-control-modern::placeholder {
-    color: var(--text-muted);
+    color: var(--text-muted) !important;
     opacity: 0.7;
 }
 
@@ -509,6 +514,7 @@ select option:checked {
 
 /* Additional Visibility Enhancements */
 .container, .container-fluid {
+    background: var(--bg-primary) !important;
     color: var(--text-primary) !important;
 }
 
@@ -852,6 +858,11 @@ hr {
     border-color: var(--accent-primary) !important;
     color: var(--text-primary) !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+.form-control::placeholder, .form-select::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.7;
 }
 
 .form-label {
