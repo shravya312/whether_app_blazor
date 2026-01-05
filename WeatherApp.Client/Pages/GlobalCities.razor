@@ -6,97 +6,85 @@
 
 <PageTitle>Top Global Cities - Weather App</PageTitle>
 
-<div class="container mt-4">
-    <h2 class="mb-4">Top 5 Global Cities Dashboard</h2>
-    <p class="text-muted mb-4">Weather information for the most popular cities worldwide</p>
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-globe me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
+        <div>
+            <h2 class="mb-0 fw-bold text-primary-modern">Top 5 Global Cities Dashboard</h2>
+            <p class="text-secondary-modern mb-0">Weather information for the most popular cities worldwide</p>
+        </div>
+    </div>
     
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border"></div>
-            <p class="mt-2">Loading global cities weather...</p>
+        <div class="text-center py-5">
+            <div class="loading-spinner mx-auto mb-3"></div>
+            <p class="text-secondary-modern mt-2">Loading global cities weather...</p>
         </div>
     }
     else if (globalCitiesWeather.Any())
     {
-        <div class="row">
+        <div class="widget-grid">
             @foreach (var cityWeather in globalCitiesWeather.OrderByDescending(c => c.Value.Timestamp))
             {
                 var weather = cityWeather.Value;
                 var cityKey = cityWeather.Key;
                 
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100 weather-city-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="card-title mb-0">@weather.City, @weather.Country</h5>
-                                @if (!string.IsNullOrEmpty(weather.Icon))
-                                {
-                                    <img src="@($"https://openweathermap.org/img/wn/{weather.Icon}@2x.png")" 
-                                         alt="@weather.Description" 
-                                         style="width: 60px; height: 60px;" />
-                                }
-                            </div>
-                            
-                            <div class="weather-main-info mb-3">
-                                <div class="display-4 mb-2">@weather.Temperature.ToString("F1")°C</div>
-                                <div class="text-muted mb-2">@weather.Description</div>
-                                <div class="small text-muted">Feels like @weather.FeelsLike.ToString("F1")°C</div>
-                            </div>
-                            
-                            <div class="weather-details">
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="detail-box">
-                                            <i class="bi bi-droplet text-primary"></i>
-                                            <div>
-                                                <small class="text-muted">Humidity</small>
-                                                <div class="fw-bold">@weather.Humidity.ToString("F0")%</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="detail-box">
-                                            <i class="bi bi-wind text-info"></i>
-                                            <div>
-                                                <small class="text-muted">Wind</small>
-                                                <div class="fw-bold">@weather.WindSpeed.ToString("F1") m/s</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="detail-box">
-                                            <i class="bi bi-speedometer text-warning"></i>
-                                            <div>
-                                                <small class="text-muted">Pressure</small>
-                                                <div class="fw-bold">@weather.Pressure.ToString("F0") hPa</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="detail-box">
-                                            <i class="bi bi-cloud text-secondary"></i>
-                                            <div>
-                                                <small class="text-muted">Clouds</small>
-                                                <div class="fw-bold">@weather.Cloudiness.ToString("F0")%</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-3">
-                                <small class="text-muted">
-                                    <i class="bi bi-clock"></i>
-                                    Updated @weather.Timestamp.ToLocalTime().ToString("g")
-                                </small>
-                            </div>
+                <div class="weather-widget fade-in">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1 text-primary-modern fw-bold">@weather.City</h5>
+                            <small class="text-secondary-modern">@weather.Country</small>
                         </div>
-                        <div class="card-footer bg-transparent">
-                            <button class="btn btn-sm btn-primary w-100" @onclick="() => ViewCityDetails(weather.City, weather.Country)">
-                                <i class="bi bi-eye"></i> View Details
-                            </button>
+                        @if (!string.IsNullOrEmpty(weather.Icon))
+                        {
+                            <img src="@($"https://openweathermap.org/img/wn/{weather.Icon}@2x.png")" 
+                                 alt="@weather.Description" 
+                                 style="width: 60px; height: 60px;" />
+                        }
+                    </div>
+                    
+                    <div class="text-center mb-3">
+                        <div class="current-temp" style="font-size: 2.5rem; margin: 0.5rem 0;">@weather.Temperature.ToString("F0")°</div>
+                        <div class="current-condition">@weather.Description</div>
+                        <small class="text-secondary-modern">Feels like @weather.FeelsLike.ToString("F1")°C</small>
+                    </div>
+                    
+                    <div class="weather-stats-grid">
+                        <div class="weather-stat">
+                            <div class="stat-icon">
+                                <i class="bi bi-droplet-fill"></i>
+                            </div>
+                            <div class="stat-value">@weather.Humidity.ToString("F0")%</div>
+                            <div class="stat-label">Humidity</div>
                         </div>
+                        <div class="weather-stat">
+                            <div class="stat-icon">
+                                <i class="bi bi-wind"></i>
+                            </div>
+                            <div class="stat-value">@weather.WindSpeed.ToString("F1")</div>
+                            <div class="stat-label">Wind m/s</div>
+                        </div>
+                        <div class="weather-stat">
+                            <div class="stat-icon">
+                                <i class="bi bi-speedometer2"></i>
+                            </div>
+                            <div class="stat-value">@weather.Pressure.ToString("F0")</div>
+                            <div class="stat-label">hPa</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-color);">
+                        <small class="text-muted-modern">
+                            <i class="bi bi-clock"></i>
+                            Updated @weather.Timestamp.ToLocalTime().ToString("g")
+                        </small>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn-modern w-100" @onclick="() => ViewCityDetails(weather.City, weather.Country)">
+                            <i class="bi bi-eye"></i> View Details
+                        </button>
                     </div>
                 </div>
             }

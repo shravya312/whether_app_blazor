@@ -1,7 +1,8 @@
 html, body {
     font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: var(--bg-primary, #0a0e27) !important;
     min-height: 100vh;
+    color: var(--text-primary, #ffffff);
 }
 
 * {

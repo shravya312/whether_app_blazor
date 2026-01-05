@@ -7,89 +7,93 @@
 
 <PageTitle>Profile - Weather App</PageTitle>
 
-<div class="container mt-4">
+<div class="container-fluid px-4 py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h2 class="mb-4">Profile Management</h2>
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-person-circle me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
+                <div>
+                    <h2 class="mb-0 fw-bold text-primary-modern">Profile Management</h2>
+                    <p class="text-secondary-modern mb-0">View and manage your account information</p>
+                </div>
+            </div>
             
             @if (isLoading)
             {
-                <div class="text-center">
-                    <div class="spinner-border"></div>
-                    <p class="mt-2">Loading profile...</p>
+                <div class="text-center py-5">
+                    <div class="loading-spinner mx-auto mb-3"></div>
+                    <p class="text-secondary-modern mt-2">Loading profile...</p>
                 </div>
             }
             else if (currentUser != null)
             {
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title mb-4">User Information</h5>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email</label>
-                            <input type="email" class="form-control" value="@currentUser.Email" readonly />
-                        </div>
+                <div class="modern-card">
+                    <h5 class="mb-4 text-primary-modern fw-bold">User Information</h5>
+                    
+                    <div class="mb-4">
+                        <label class="form-label text-primary-modern fw-bold">Email</label>
+                        <input type="email" class="form-control-modern" value="@currentUser.Email" readonly />
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">User ID</label>
-                            <input type="text" class="form-control" value="@currentUser.Id" readonly />
-                            <small class="text-muted">This is your unique identifier</small>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label text-primary-modern fw-bold">User ID</label>
+                        <input type="text" class="form-control-modern" value="@currentUser.Id" readonly />
+                        <small class="text-muted-modern">This is your unique identifier</small>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Account Created</label>
-                            <input type="text" class="form-control" value="@(currentUser.CreatedAt.ToString("g"))" readonly />
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label text-primary-modern fw-bold">Account Created</label>
+                        <input type="text" class="form-control-modern" value="@(currentUser.CreatedAt.ToString("g"))" readonly />
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Last Sign In</label>
-                            <input type="text" class="form-control" value="@(currentUser.LastSignInAt?.ToString("g") ?? "Never")" readonly />
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label text-primary-modern fw-bold">Last Sign In</label>
+                        <input type="text" class="form-control-modern" value="@(currentUser.LastSignInAt?.ToString("g") ?? "Never")" readonly />
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email Confirmed</label>
-                            <div>
-                                @if (currentUser.EmailConfirmedAt.HasValue)
-                                {
-                                    <span class="badge bg-success">Confirmed</span>
-                                    <small class="text-muted ms-2">@currentUser.EmailConfirmedAt.Value.ToString("g")</small>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning">Pending</span>
-                                    <small class="text-muted ms-2">Please check your email to confirm your account</small>
-                                }
+                    <div class="mb-4">
+                        <label class="form-label text-primary-modern fw-bold">Email Confirmed</label>
+                        <div class="d-flex align-items-center gap-2">
+                            @if (currentUser.EmailConfirmedAt.HasValue)
+                            {
+                                <span class="badge" style="background: #10b981; color: #fff;">Confirmed</span>
+                                <small class="text-muted-modern">@currentUser.EmailConfirmedAt.Value.ToString("g")</small>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background: #f59e0b; color: #000;">Pending</span>
+                                <small class="text-muted-modern">Please check your email to confirm your account</small>
+                            }
+                        </div>
+                    </div>
+
+                    @if (currentUser.UserMetadata != null && currentUser.UserMetadata.Any())
+                    {
+                        <div class="mb-4">
+                            <label class="form-label text-primary-modern fw-bold">Additional Information</label>
+                            <div class="modern-card" style="background: rgba(255, 255, 255, 0.03);">
+                                <pre class="mb-0 text-secondary-modern" style="white-space: pre-wrap; word-wrap: break-word;">@System.Text.Json.JsonSerializer.Serialize(currentUser.UserMetadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
                             </div>
                         </div>
+                    }
 
-                        @if (currentUser.UserMetadata != null && currentUser.UserMetadata.Any())
-                        {
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Additional Information</label>
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <pre class="mb-0">@System.Text.Json.JsonSerializer.Serialize(currentUser.UserMetadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <div class="d-flex gap-2 mt-4">
-                            <button class="btn btn-primary" @onclick="RefreshProfile">
-                                <i class="bi bi-arrow-clockwise"></i> Refresh
-                            </button>
-                            <button class="btn btn-outline-danger" @onclick="SignOut">
-                                <i class="bi bi-box-arrow-right"></i> Sign Out
-                            </button>
-                        </div>
+                    <div class="d-flex gap-2 mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
+                        <button class="btn-modern" @onclick="RefreshProfile">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn-modern-outline" style="border-color: #ef4444; color: #ef4444;" @onclick="SignOut">
+                            <i class="bi bi-box-arrow-right"></i> Sign Out
+                        </button>
                     </div>
                 </div>
             }
             else
             {
-                <div class="alert alert-warning">
-                    <p>Unable to load profile information. Please try again.</p>
-                    <button class="btn btn-primary" @onclick="RefreshProfile">Retry</button>
+                <div class="modern-card">
+                    <div class="alert alert-warning">
+                        <p class="text-primary-modern mb-3">Unable to load profile information. Please try again.</p>
+                        <button class="btn-modern" @onclick="RefreshProfile">Retry</button>
+                    </div>
                 </div>
             }
         </div>
@@ -145,4 +149,3 @@
         }
     }
 }
-

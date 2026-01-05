@@ -10,94 +10,99 @@
 
 <PageTitle>Alert Settings - Weather App</PageTitle>
 
-<div class="container mt-4">
-    <h2 class="mb-4">Alert Settings</h2>
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-bell me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
+        <div>
+            <h2 class="mb-0 fw-bold text-primary-modern">Alert Settings</h2>
+            <p class="text-secondary-modern mb-0">Configure your weather alert preferences</p>
+        </div>
+    </div>
     
     @if (isLoading)
     {
-        <div class="text-center">
-            <div class="spinner-border"></div>
-            <p class="mt-2">Loading settings...</p>
+        <div class="text-center py-5">
+            <div class="loading-spinner mx-auto mb-3"></div>
+            <p class="text-secondary-modern mt-2">Loading settings...</p>
         </div>
     }
     else
     {
         <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title mb-4">Custom Alert Thresholds</h5>
+            <div class="col-md-10">
+                <div class="modern-card">
+                    <h5 class="mb-4 text-primary-modern fw-bold">Custom Alert Thresholds</h5>
                         
                         <EditForm Model="@settings" OnValidSubmit="SaveSettings">
                             <DataAnnotationsValidator />
                             
-                            <div class="row mb-3">
+                            <div class="row mb-4">
                                 <div class="col-md-6">
-                                    <label class="form-label">Maximum Temperature (°C)</label>
-                                    <input type="number" class="form-control" @bind="maxTemp" step="0.1" />
-                                    <small class="text-muted">Alert when temperature exceeds this value</small>
+                                    <label class="form-label text-primary-modern fw-bold">Maximum Temperature (°C)</label>
+                                    <input type="number" class="form-control-modern" @bind="maxTemp" step="0.1" />
+                                    <small class="text-muted-modern">Alert when temperature exceeds this value</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Minimum Temperature (°C)</label>
-                                    <input type="number" class="form-control" @bind="minTemp" step="0.1" />
-                                    <small class="text-muted">Alert when temperature drops below this value</small>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Maximum Wind Speed (m/s)</label>
-                                    <input type="number" class="form-control" @bind="maxWind" step="0.1" />
-                                    <small class="text-muted">Alert when wind speed exceeds this value</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Maximum Humidity (%)</label>
-                                    <input type="number" class="form-control" @bind="maxHumidity" step="0.1" />
-                                    <small class="text-muted">Alert when humidity exceeds this value</small>
+                                    <label class="form-label text-primary-modern fw-bold">Minimum Temperature (°C)</label>
+                                    <input type="number" class="form-control-modern" @bind="minTemp" step="0.1" />
+                                    <small class="text-muted-modern">Alert when temperature drops below this value</small>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Minimum Humidity (%)</label>
-                                <input type="number" class="form-control" @bind="minHumidity" step="0.1" />
-                                <small class="text-muted">Alert when humidity drops below this value</small>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-primary-modern fw-bold">Maximum Wind Speed (m/s)</label>
+                                    <input type="number" class="form-control-modern" @bind="maxWind" step="0.1" />
+                                    <small class="text-muted-modern">Alert when wind speed exceeds this value</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-primary-modern fw-bold">Maximum Humidity (%)</label>
+                                    <input type="number" class="form-control-modern" @bind="maxHumidity" step="0.1" />
+                                    <small class="text-muted-modern">Alert when humidity exceeds this value</small>
+                                </div>
                             </div>
 
-                            <hr />
+                            <div class="mb-4">
+                                <label class="form-label text-primary-modern fw-bold">Minimum Humidity (%)</label>
+                                <input type="number" class="form-control-modern" @bind="minHumidity" step="0.1" />
+                                <small class="text-muted-modern">Alert when humidity drops below this value</small>
+                            </div>
 
-                            <h6 class="mb-3">Weather Condition Alerts</h6>
+                            <hr style="border-color: var(--border-color); margin: 2rem 0;" />
+
+                            <h6 class="mb-4 text-primary-modern fw-bold">Weather Condition Alerts</h6>
                             
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" @bind="settings.EnableThunderstormAlerts" />
-                                    <label class="form-check-label">Enable Thunderstorm Alerts</label>
+                                    <label class="form-check-label text-primary-modern">Enable Thunderstorm Alerts</label>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" @bind="settings.EnableHeavyRainAlerts" />
-                                    <label class="form-check-label">Enable Heavy Rain Alerts</label>
+                                    <label class="form-check-label text-primary-modern">Enable Heavy Rain Alerts</label>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" @bind="settings.EnableHeavySnowAlerts" />
-                                    <label class="form-check-label">Enable Heavy Snow Alerts</label>
+                                    <label class="form-check-label text-primary-modern">Enable Heavy Snow Alerts</label>
                                 </div>
                             </div>
 
-                            <hr />
+                            <hr style="border-color: var(--border-color); margin: 2rem 0;" />
 
-                            <h6 class="mb-3">Notification Preferences</h6>
+                            <h6 class="mb-4 text-primary-modern fw-bold">Notification Preferences</h6>
                             
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" checked="@settings.EnablePushNotifications" @onchange="OnPushNotificationToggle" />
-                                    <label class="form-check-label">Enable Web Push Notifications (Background)</label>
+                                    <label class="form-check-label text-primary-modern">Enable Web Push Notifications (Background)</label>
                                 </div>
-                                <small class="text-muted">Receive alerts even when app is closed (requires subscription)</small>
+                                <small class="text-muted-modern">Receive alerts even when app is closed (requires subscription)</small>
                                 @if (pushSubscriptionStatus != null)
                                 {
                                     <div class="mt-2">
@@ -122,30 +127,30 @@
                                 }
                             </div>
 
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" @bind="settings.EnableEmailNotifications" />
-                                    <label class="form-check-label">Enable Email Notifications</label>
+                                    <label class="form-check-label text-primary-modern">Enable Email Notifications</label>
                                 </div>
-                                <small class="text-muted">Email notifications require backend configuration</small>
+                                <small class="text-muted-modern">Email notifications require backend configuration</small>
                             </div>
 
-                            <hr />
+                            <hr style="border-color: var(--border-color); margin: 2rem 0;" />
 
-                            <h6 class="mb-3">Monitored Cities</h6>
-                            <div class="alert alert-info">
-                                <p class="mb-0">
+                            <h6 class="mb-4 text-primary-modern fw-bold">Monitored Cities</h6>
+                            <div class="modern-card mb-4" style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6;">
+                                <p class="mb-2 text-primary-modern">
                                     <strong>✅ Email notifications work for ALL cities you search.</strong> The system automatically checks all cities for weather alerts and sends email notifications when alerts trigger.
                                 </p>
-                                <p class="mb-0 mt-2">
-                                    <small>Below, you can select specific favorite cities to prioritize. <strong>All new cities are checked by default</strong> - they will receive email alerts automatically.</small>
+                                <p class="mb-0 text-secondary-modern">
+                                    <small>Below, you can select specific favorite cities to prioritize. <strong class="text-primary-modern">All new cities are checked by default</strong> - they will receive email alerts automatically.</small>
                                 </p>
                             </div>
                             
                             @if (favoriteCities.Any())
                             {
-                                <p class="text-muted mt-3">Select specific favorite cities to monitor (all are checked by default):</p>
-                                <div class="mb-3">
+                                <p class="text-secondary-modern mt-3 mb-3">Select specific favorite cities to monitor (all are checked by default):</p>
+                                <div class="mb-4">
                                     @foreach (var city in favoriteCities)
                                     {
                                         var cityKey = $"{city.City}, {city.Country}";
@@ -154,49 +159,49 @@
                                         var isMonitored = settings.MonitoredCities == null || 
                                                          !settings.MonitoredCities.Any() || 
                                                          settings.MonitoredCities.Contains(cityKey);
-                                        <div class="form-check mb-2">
+                                        <div class="form-check mb-3">
                                             <input type="checkbox" class="form-check-input" 
                                                    checked="@isMonitored"
                                                    @onchange="@((ChangeEventArgs e) => ToggleMonitoredCity(cityKey, e.Value?.ToString() == "True"))" />
-                                            <label class="form-check-label">@cityKey</label>
+                                            <label class="form-check-label text-primary-modern">@cityKey</label>
                                         </div>
                                     }
                                 </div>
                             }
                             else
                             {
-                                <p class="text-muted">No favorite cities yet. All cities you search will be automatically monitored for alerts.</p>
+                                <p class="text-secondary-modern">No favorite cities yet. All cities you search will be automatically monitored for alerts.</p>
                             }
 
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                            <div class="d-flex gap-2 flex-wrap mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
+                                <button type="submit" class="btn-modern" disabled="@isSaving">
                                     @if (isSaving)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2"></span>
                                     }
-                                    Save Settings
+                                    <i class="bi bi-save"></i> Save Settings
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" @onclick="RequestNotificationPermission">
-                                    Request Notification Permission
+                                <button type="button" class="btn-modern-outline" @onclick="RequestNotificationPermission">
+                                    <i class="bi bi-bell"></i> Request Notification Permission
                                 </button>
                                 @if (settings.EnablePushNotifications && pushSubscriptionStatus != "subscribed")
                                 {
-                                    <button type="button" class="btn btn-outline-primary" @onclick="SubscribeToPush" disabled="@isSubscribing">
+                                    <button type="button" class="btn-modern-outline" @onclick="SubscribeToPush" disabled="@isSubscribing">
                                         @if (isSubscribing)
                                         {
                                             <span class="spinner-border spinner-border-sm me-2"></span>
                                         }
-                                        Subscribe to Push
+                                        <i class="bi bi-bell-fill"></i> Subscribe to Push
                                     </button>
                                 }
                                 @if (pushSubscriptionStatus == "subscribed")
                                 {
-                                    <button type="button" class="btn btn-outline-danger" @onclick="UnsubscribeFromPush" disabled="@isUnsubscribing">
+                                    <button type="button" class="btn-modern-outline" style="border-color: #ef4444; color: #ef4444;" @onclick="UnsubscribeFromPush" disabled="@isUnsubscribing">
                                         @if (isUnsubscribing)
                                         {
                                             <span class="spinner-border spinner-border-sm me-2"></span>
                                         }
-                                        Unsubscribe
+                                        <i class="bi bi-bell-slash"></i> Unsubscribe
                                     </button>
                                 }
                             </div>
@@ -204,14 +209,13 @@
 
                         @if (!string.IsNullOrEmpty(saveMessage))
                         {
-                            <div class="alert @(saveSuccess ? "alert-success" : "alert-danger") mt-3">
-                                @saveMessage
+                            <div class="alert @(saveSuccess ? "alert-success" : "alert-danger") mt-4">
+                                <p class="text-primary-modern mb-0">@saveMessage</p>
                             </div>
                         }
                     </div>
                 </div>
             </div>
-        </div>
     }
 </div>
 
