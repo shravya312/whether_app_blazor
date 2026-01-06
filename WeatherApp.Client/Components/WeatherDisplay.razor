@@ -364,6 +364,16 @@
         padding: 20px;
     }
     
+    /* Only style the search input box with black text */
+    .search-section .form-control {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
+    .search-section .form-control::placeholder {
+        color: #666666 !important;
+    }
+    
     .weather-card {
         background: var(--bg-card, rgba(30, 35, 50, 0.8));
         backdrop-filter: blur(10px);

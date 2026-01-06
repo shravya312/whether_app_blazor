@@ -52,22 +52,25 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email</label>
-                            <InputText @bind-Value="formModel.Email" class="form-control form-control-lg" 
-                                      placeholder="Enter your email" />
+                            <InputText @bind-Value="formModel.Email" class="form-control form-control-lg auth-input" 
+                                      placeholder="Enter your email" 
+                                      style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;" />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Password</label>
-                            <InputText @bind-Value="formModel.Password" class="form-control form-control-lg" 
-                                      type="password" placeholder="Enter your password" />
+                            <InputText @bind-Value="formModel.Password" class="form-control form-control-lg auth-input" 
+                                      type="password" placeholder="Enter your password"
+                                      style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;" />
                         </div>
 
                         @if (!isSignInMode)
                         {
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Confirm Password</label>
-                                <InputText @bind-Value="formModel.ConfirmPassword" class="form-control form-control-lg" 
-                                          type="password" placeholder="Confirm your password" />
+                                <InputText @bind-Value="formModel.ConfirmPassword" class="form-control form-control-lg auth-input" 
+                                          type="password" placeholder="Confirm your password"
+                                          style="color: #000000 !important; -webkit-text-fill-color: #000000 !important;" />
                             </div>
                         }
 
@@ -97,6 +100,31 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Force black text in auth inputs with highest specificity */
+    .auth-page input.form-control,
+    .auth-page .form-control-lg,
+    .auth-page input[type="email"],
+    .auth-page input[type="password"],
+    .auth-page input[type="text"],
+    .auth-page .auth-input,
+    .auth-page .auth-input input {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
+    .auth-page input:-webkit-autofill,
+    .auth-page input:-webkit-autofill:hover,
+    .auth-page input:-webkit-autofill:focus,
+    .auth-page input:-webkit-autofill:active {
+        -webkit-text-fill-color: #000000 !important;
+        -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+        box-shadow: 0 0 0px 1000px #ffffff inset !important;
+        color: #000000 !important;
+    }
+</style>
 
 @code {
     [Parameter]

@@ -790,8 +790,41 @@ hr {
 
 .auth-page .form-control {
     background: #ffffff !important;
-    color: #2d3748 !important;
+    color: #000000 !important;
     border-color: #e2e8f0 !important;
+}
+
+.auth-page .form-control-lg {
+    color: #000000 !important;
+}
+
+.auth-page input[type="email"],
+.auth-page input[type="password"],
+.auth-page input[type="text"] {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+.auth-page .form-control::placeholder {
+    color: #999999 !important;
+    opacity: 0.7 !important;
+}
+
+/* Override Blazor InputText component styles */
+.auth-page ::deep input.form-control,
+.auth-page ::deep .form-control-lg {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
+/* Override autofill styles */
+.auth-page input:-webkit-autofill,
+.auth-page input:-webkit-autofill:hover,
+.auth-page input:-webkit-autofill:focus,
+.auth-page input:-webkit-autofill:active {
+    -webkit-text-fill-color: #000000 !important;
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    box-shadow: 0 0 0px 1000px #ffffff inset !important;
 }
 
 .auth-page .text-muted {
@@ -853,10 +886,30 @@ hr {
     color: var(--text-primary) !important;
 }
 
+/* Override for auth page - must come after general form-control rule */
+.auth-page .form-control,
+.auth-page .form-control-lg,
+.auth-page input.form-control {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #e2e8f0 !important;
+    -webkit-text-fill-color: #000000 !important;
+}
+
 .form-control:focus, .form-select:focus {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: var(--accent-primary) !important;
     color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+.auth-page .form-control:focus,
+.auth-page .form-control-lg:focus,
+.auth-page input.form-control:focus {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #667eea !important;
+    -webkit-text-fill-color: #000000 !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
 }
 
