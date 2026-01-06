@@ -40,6 +40,12 @@ builder.Services.AddScoped<EmailService>();
 // Push Notification Service
 builder.Services.AddSingleton<PushNotificationService>();
 
+// ML Service (Singleton for model caching)
+builder.Services.AddSingleton<MLService>();
+
+// AIML Chatbot Service
+builder.Services.AddScoped<AIMLService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -41,6 +41,7 @@ try
         var config = provider.GetRequiredService<IConfiguration>();
         return new EmailNotificationService(httpClient, jsRuntime, config);
     });
+    builder.Services.AddScoped<ChatbotService>();
     builder.Services.AddScoped<FavoriteCitiesMonitorService>(provider =>
     {
         var weatherApi = provider.GetRequiredService<WeatherApiService>();
