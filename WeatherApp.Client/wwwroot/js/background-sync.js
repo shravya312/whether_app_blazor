@@ -72,3 +72,26 @@ window.triggerWeatherSync = async function() {
   }
 };
 
+// Function to trigger email queue sync
+window.triggerEmailSync = async function() {
+  if ('serviceWorker' in navigator) {
+    const registration = await navigator.serviceWorker.ready;
+    if (registration.sync) {
+      await registration.sync.register('email-sync');
+      console.log('Manual email sync triggered');
+    }
+  }
+};
+
+// Auto-register email sync when online
+if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+  window.addEventListener('online', async () => {
+    console.log('Connection restored - triggering email sync...');
+    try {
+      await window.triggerEmailSync();
+    } catch (error) {
+      console.log('Email sync trigger failed:', error);
+    }
+  });
+}
+

@@ -24,7 +24,10 @@ namespace WeatherApp.API.Controllers
             try
             {
                 var publicKey = _pushService.GetVapidPublicKey();
-                return Content(publicKey, "text/plain");
+                // Ensure the key is trimmed and has no extra whitespace
+                var cleanKey = publicKey.Trim();
+                // Return as plain text with proper content type
+                return Content(cleanKey, "text/plain; charset=utf-8");
             }
             catch (Exception ex)
             {

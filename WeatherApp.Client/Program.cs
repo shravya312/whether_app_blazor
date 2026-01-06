@@ -34,7 +34,13 @@ try
     builder.Services.AddScoped<AlertHistoryService>();
     builder.Services.AddScoped<WeatherAlertsService>();
     builder.Services.AddScoped<SearchedCitiesService>();
-    builder.Services.AddScoped<EmailNotificationService>();
+    builder.Services.AddScoped<EmailNotificationService>(provider =>
+    {
+        var httpClient = provider.GetRequiredService<HttpClient>();
+        var jsRuntime = provider.GetRequiredService<IJSRuntime>();
+        var config = provider.GetRequiredService<IConfiguration>();
+        return new EmailNotificationService(httpClient, jsRuntime, config);
+    });
     builder.Services.AddScoped<FavoriteCitiesMonitorService>(provider =>
     {
         var weatherApi = provider.GetRequiredService<WeatherApiService>();

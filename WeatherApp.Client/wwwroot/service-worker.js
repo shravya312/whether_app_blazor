@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weather-app-v1';
+const CACHE_NAME = 'weather-app-v2';
 const urlsToCache = [
   '/',
   '/css/app.css',
@@ -48,10 +48,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Background sync for offline weather updates
+// Background sync for offline weather updates and email queue
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-weather-sync') {
     event.waitUntil(syncWeatherData());
+  } else if (event.tag === 'email-sync') {
+    event.waitUntil(syncEmailQueue());
   }
 });
 
@@ -205,4 +207,215 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('notificationclose', (event) => {
   console.log('Notification closed:', event);
 });
+
+// Email queue sync function - Continuously attempts to send queued emails
+// This will automatically succeed when connection is restored
+async function syncEmailQueue() {
+  try {
+    console.log('🔄 Email sync triggered - Processing email queue...');
+    
+    // Get API base URL from environment or use default
+    // Try to extract from registration scope, fallback to common ports
+    let apiBaseUrl = 'http://localhost:5009';
+    try {
+      const scope = self.registration.scope;
+      // Extract base URL and replace port
+      const url = new URL(scope);
+      apiBaseUrl = `${url.protocol}//${url.hostname}:5009`;
+    } catch (e) {
+      console.log('Using default API URL:', apiBaseUrl);
+    }
+    
+    // Open IndexedDB
+    const dbName = 'WeatherAppEmailQueue';
+    const dbVersion = 1;
+    const storeName = 'emails';
+    
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, dbVersion);
+      
+      request.onsuccess = async () => {
+        const db = request.result;
+        
+        try {
+          // Get all pending emails (including failed ones that can be retried)
+          const transaction = db.transaction([storeName], 'readonly');
+          const store = transaction.objectStore(storeName);
+          const index = store.index('status');
+          
+          // Get pending emails
+          const pendingRequest = index.getAll('pending');
+          
+          pendingRequest.onsuccess = async () => {
+            const pendingEmails = pendingRequest.result || [];
+            
+            // Also get failed emails that haven't exceeded retry limit
+            const failedRequest = index.getAll('failed');
+            
+            failedRequest.onsuccess = async () => {
+              const failedEmails = (failedRequest.result || []).filter(e => 
+                (e.retryCount || 0) < 5
+              );
+              
+              const allEmails = [...pendingEmails, ...failedEmails];
+              console.log(`📧 Found ${allEmails.length} emails to process (${pendingEmails.length} pending, ${failedEmails.length} retryable)`);
+              
+              if (allEmails.length === 0) {
+                console.log('✅ No emails to process');
+                resolve();
+                return;
+              }
+              
+              let sent = 0;
+              let failed = 0;
+              let queued = 0;
+              
+              for (const email of allEmails) {
+                try {
+                  // Update status to sending
+                  const updateTransaction = db.transaction([storeName], 'readwrite');
+                  const updateStore = updateTransaction.objectStore(storeName);
+                  email.status = 'sending';
+                  email.retryCount = (email.retryCount || 0) + 1;
+                  email.lastAttempt = Date.now();
+                  
+                  await new Promise((resolveUpdate) => {
+                    const updateRequest = updateStore.put(email);
+                    updateRequest.onsuccess = () => resolveUpdate();
+                    updateRequest.onerror = () => resolveUpdate();
+                  });
+                  
+                  console.log(`📤 Attempting to send email ${email.id} to ${email.toEmail} (attempt ${email.retryCount})...`);
+                  
+                  // Attempt to send email via API
+                  // This will fail if offline, but Background Sync will retry automatically
+                  const response = await fetch(`${apiBaseUrl}/api/notifications/email/weather-alert`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      ToEmail: email.toEmail,
+                      City: email.city,
+                      Country: email.country,
+                      AlertMessage: email.alertMessage,
+                      AlertType: email.alertType
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    // Email sent successfully - delete from queue
+                    const deleteTransaction = db.transaction([storeName], 'readwrite');
+                    const deleteStore = deleteTransaction.objectStore(storeName);
+                    await new Promise((resolveDelete) => {
+                      const deleteRequest = deleteStore.delete(email.id);
+                      deleteRequest.onsuccess = () => resolveDelete();
+                      deleteRequest.onerror = () => resolveDelete();
+                    });
+                    sent++;
+                    console.log(`✅ Email ${email.id} sent successfully to ${email.toEmail}`);
+                  } else {
+                    // Failed to send - will retry on next sync
+                    const errorText = await response.text();
+                    const failTransaction = db.transaction([storeName], 'readwrite');
+                    const failStore = failTransaction.objectStore(storeName);
+                    
+                    if (email.retryCount >= 5) {
+                      email.status = 'failed';
+                      email.lastError = `Max retries exceeded: ${errorText}`;
+                      failed++;
+                      console.error(`❌ Email ${email.id} failed permanently after ${email.retryCount} attempts`);
+                    } else {
+                      // Reset to pending for retry
+                      email.status = 'pending';
+                      email.lastError = errorText;
+                      queued++;
+                      console.log(`⏳ Email ${email.id} queued for retry (attempt ${email.retryCount}/5): ${errorText.substring(0, 50)}`);
+                    }
+                    
+                    await new Promise((resolveFail) => {
+                      const failRequest = failStore.put(email);
+                      failRequest.onsuccess = () => resolveFail();
+                      failRequest.onerror = () => resolveFail();
+                    });
+                  }
+                } catch (error) {
+                  // Network error or other exception - will retry on next sync
+                  console.error(`⚠️ Error processing email ${email.id}:`, error.message);
+                  
+                  const errorTransaction = db.transaction([storeName], 'readwrite');
+                  const errorStore = errorTransaction.objectStore(storeName);
+                  
+                  if (email.retryCount >= 5) {
+                    email.status = 'failed';
+                    email.lastError = `Max retries exceeded: ${error.message}`;
+                    failed++;
+                  } else {
+                    email.status = 'pending';
+                    email.lastError = error.message;
+                    queued++;
+                  }
+                  
+                  await new Promise((resolveError) => {
+                    const errorRequest = errorStore.put(email);
+                    errorRequest.onsuccess = () => resolveError();
+                    errorRequest.onerror = () => resolveError();
+                  });
+                }
+              }
+              
+              console.log(`📊 Email sync completed: ${sent} sent ✅, ${queued} queued for retry ⏳, ${failed} failed permanently ❌`);
+              
+              // If there are still pending emails, register another sync
+              // This ensures continuous retry until all emails are sent
+              if (queued > 0) {
+                console.log(`🔄 Registering another sync for ${queued} queued emails...`);
+                self.registration.sync.register('email-sync').catch(err => {
+                  console.log('Could not register additional sync:', err);
+                });
+              }
+              
+              resolve();
+            };
+            
+            failedRequest.onerror = () => {
+              console.error('Failed to get failed emails:', failedRequest.error);
+              resolve(); // Don't reject, just continue
+            };
+          };
+          
+          pendingRequest.onerror = () => {
+            console.error('Failed to get pending emails:', pendingRequest.error);
+            reject(pendingRequest.error);
+          };
+        } catch (error) {
+          console.error('Error in email sync:', error);
+          reject(error);
+        }
+      };
+      
+      request.onerror = () => {
+        console.error('Failed to open email queue database:', request.error);
+        reject(request.error);
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const database = event.target.result;
+        if (!database.objectStoreNames.contains(storeName)) {
+          const objectStore = database.createObjectStore(storeName, {
+            keyPath: 'id',
+            autoIncrement: true
+          });
+          objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+          objectStore.createIndex('status', 'status', { unique: false });
+          objectStore.createIndex('toEmail', 'toEmail', { unique: false });
+        }
+      };
+    });
+  } catch (error) {
+    console.error('❌ Error syncing email queue:', error);
+    // Don't reject - allow Background Sync to retry
+    throw error; // Re-throw so Background Sync can retry
+  }
+}
 

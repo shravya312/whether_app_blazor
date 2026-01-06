@@ -64,15 +64,34 @@ namespace WeatherApp.Client.Services
                 if (!await IsSupportedAsync())
                 {
                     Console.WriteLine("Push notifications not supported");
-                    return null;
+                    throw new InvalidOperationException("Push notifications are not supported in this browser. Please use a modern browser like Chrome, Firefox, or Edge.");
                 }
 
-                var subscription = await _jsRuntime.InvokeAsync<PushSubscriptionDto>("PushNotification.subscribe", userId);
+                Console.WriteLine($"Attempting to subscribe user {userId} with API URL: {_apiBaseUrl}");
+                
+                // Pass API base URL to JavaScript
+                // Use InvokeAsync with error handling to get JavaScript errors
+                PushSubscriptionDto? subscription = null;
+                try
+                {
+                    subscription = await _jsRuntime.InvokeAsync<PushSubscriptionDto>("PushNotification.subscribe", userId, _apiBaseUrl);
+                }
+                catch (JSException jsEx)
+                {
+                    Console.WriteLine($"JavaScript error during subscription: {jsEx.Message}");
+                    throw new InvalidOperationException($"Subscription failed: {jsEx.Message}. Please check the browser console for details.");
+                }
                 
                 if (subscription != null)
                 {
+                    Console.WriteLine($"Subscription received, saving to backend...");
                     // Save subscription to backend
                     await SaveSubscriptionToBackendAsync(userId, subscription);
+                    Console.WriteLine($"Subscription saved successfully");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Subscription returned null. Check browser console for JavaScript errors.");
                 }
 
                 return subscription;
@@ -80,7 +99,8 @@ namespace WeatherApp.Client.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error subscribing to push: {ex.Message}");
-                return null;
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw; // Re-throw to let caller handle it
             }
         }
 
@@ -119,17 +139,23 @@ namespace WeatherApp.Client.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync(
-                    $"{_apiBaseUrl}/api/push/subscribe",
+                    $"{_apiBaseUrl}/api/PushNotification/subscribe",
                     new { UserId = userId, Subscription = subscription });
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"Failed to save subscription: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to save subscription: {response.StatusCode} - {errorContent}");
+                }
+                else
+                {
+                    Console.WriteLine($"Successfully saved subscription for user {userId}");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error saving subscription to backend: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
@@ -138,17 +164,23 @@ namespace WeatherApp.Client.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync(
-                    $"{_apiBaseUrl}/api/push/unsubscribe",
+                    $"{_apiBaseUrl}/api/PushNotification/unsubscribe",
                     new { UserId = userId });
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"Failed to remove subscription: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to remove subscription: {response.StatusCode} - {errorContent}");
+                }
+                else
+                {
+                    Console.WriteLine($"Successfully removed subscription for user {userId}");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error removing subscription from backend: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
     }

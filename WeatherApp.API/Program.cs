@@ -49,7 +49,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Only use HTTPS redirection if HTTPS is available
+// Skip HTTPS redirection when running on HTTP only to avoid warnings
+var urls = builder.Configuration["ASPNETCORE_URLS"] ?? 
+           builder.Configuration["urls"] ?? 
+           Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "";
+
+if (urls.Contains("https://", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHttpsRedirection();
+}
 
 // Enable CORS (must be before UseAuthorization)
 app.UseCors("AllowBlazorClient");
@@ -58,6 +67,26 @@ app.UseRouting();
 
 // Note: No authentication required for API endpoints currently
 // app.UseAuthorization(); // Commented out - API endpoints are public
+
+// Add a root route that redirects to Swagger in development, or shows API info
+app.MapGet("/", () => 
+{
+    if (app.Environment.IsDevelopment())
+    {
+        return Results.Redirect("/swagger");
+    }
+    return Results.Ok(new 
+    { 
+        message = "Weather App API", 
+        version = "1.0",
+        endpoints = new[] 
+        { 
+            "/swagger - API Documentation",
+            "/api/weather/{city} - Get weather by city",
+            "/api/push/vapid-public-key - Get VAPID public key"
+        }
+    });
+});
 
 app.MapControllers();
 

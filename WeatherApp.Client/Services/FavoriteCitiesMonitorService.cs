@@ -117,7 +117,7 @@ namespace WeatherApp.Client.Services
                                 {
                                     var apiBaseUrl = _configuration["ApiBaseUrl"] ?? "http://localhost:5009";
                                     await _httpClient.PostAsJsonAsync(
-                                        $"{apiBaseUrl}/api/push/send",
+                                        $"{apiBaseUrl}/api/PushNotification/send",
                                         new
                                         {
                                             UserId = userId,
@@ -341,7 +341,7 @@ namespace WeatherApp.Client.Services
                                 {
                                     var apiBaseUrl = _configuration["ApiBaseUrl"] ?? "http://localhost:5009";
                                     await _httpClient.PostAsJsonAsync(
-                                        $"{apiBaseUrl}/api/push/send",
+                                        $"{apiBaseUrl}/api/PushNotification/send",
                                         new
                                         {
                                             UserId = userId,

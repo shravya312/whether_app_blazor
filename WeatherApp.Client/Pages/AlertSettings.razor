@@ -99,32 +99,62 @@
                             
                             <div class="mb-4">
                                 <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" checked="@settings.EnablePushNotifications" @onchange="OnPushNotificationToggle" />
+                                    <input type="checkbox" class="form-check-input" checked="@settings.EnablePushNotifications" @onchange="OnPushNotificationToggle" disabled="@(isSubscribing || isUnsubscribing)" />
                                     <label class="form-check-label text-primary-modern">Enable Web Push Notifications (Background)</label>
                                 </div>
-                                <small class="text-muted-modern">Receive alerts even when app is closed (requires subscription)</small>
+                                <small class="text-muted-modern">Receive alerts even when app is closed</small>
                                 @if (pushSubscriptionStatus != null)
                                 {
                                     <div class="mt-2">
                                         @{
-                                            var badgeClass = pushSubscriptionStatus == "subscribed" ? "bg-success" : "bg-warning";
+                                            var badgeClass = pushSubscriptionStatus == "subscribed" ? "bg-success" : pushSubscriptionStatus == "not-supported" ? "bg-secondary" : "bg-warning";
                                         }
                                         <span class="badge @badgeClass">
                                             @if (pushSubscriptionStatus == "subscribed")
                                             {
-                                                <i class="bi bi-check-circle"></i> <text>Subscribed</text>
+                                                <i class="bi bi-check-circle"></i> <text>Active</text>
                                             }
                                             else if (pushSubscriptionStatus == "not-supported")
                                             {
                                                 <i class="bi bi-x-circle"></i> <text>Not Supported</text>
                                             }
+                                            else if (isSubscribing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-1"></span> <text>Setting up...</text>
+                                            }
                                             else
                                             {
-                                                <i class="bi bi-exclamation-triangle"></i> <text>Not Subscribed</text>
+                                                <i class="bi bi-exclamation-triangle"></i> <text>Inactive</text>
                                             }
                                         </span>
                                     </div>
                                 }
+                                
+                                <div class="d-flex gap-2 flex-wrap mt-3">
+                                    <button type="button" class="btn-modern-outline" @onclick="RequestNotificationPermission">
+                                        <i class="bi bi-bell"></i> Request Notification Permission
+                                    </button>
+                                    @if (settings.EnablePushNotifications && pushSubscriptionStatus != "subscribed" && pushSubscriptionStatus != "not-supported")
+                                    {
+                                        <button type="button" class="btn-modern-outline" @onclick="SubscribeToPush" disabled="@isSubscribing">
+                                            @if (isSubscribing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                            }
+                                            <i class="bi bi-bell-fill"></i> Subscribe to Push
+                                        </button>
+                                    }
+                                    @if (pushSubscriptionStatus == "subscribed")
+                                    {
+                                        <button type="button" class="btn-modern-outline" style="border-color: #ef4444; color: #ef4444;" @onclick="UnsubscribeFromPush" disabled="@isUnsubscribing">
+                                            @if (isUnsubscribing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                            }
+                                            <i class="bi bi-bell-slash"></i> Unsubscribe
+                                        </button>
+                                    }
+                                </div>
                             </div>
 
                             <div class="mb-4">
@@ -181,29 +211,6 @@
                                     }
                                     <i class="bi bi-save"></i> Save Settings
                                 </button>
-                                <button type="button" class="btn-modern-outline" @onclick="RequestNotificationPermission">
-                                    <i class="bi bi-bell"></i> Request Notification Permission
-                                </button>
-                                @if (settings.EnablePushNotifications && pushSubscriptionStatus != "subscribed")
-                                {
-                                    <button type="button" class="btn-modern-outline" @onclick="SubscribeToPush" disabled="@isSubscribing">
-                                        @if (isSubscribing)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2"></span>
-                                        }
-                                        <i class="bi bi-bell-fill"></i> Subscribe to Push
-                                    </button>
-                                }
-                                @if (pushSubscriptionStatus == "subscribed")
-                                {
-                                    <button type="button" class="btn-modern-outline" style="border-color: #ef4444; color: #ef4444;" @onclick="UnsubscribeFromPush" disabled="@isUnsubscribing">
-                                        @if (isUnsubscribing)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2"></span>
-                                        }
-                                        <i class="bi bi-bell-slash"></i> Unsubscribe
-                                    </button>
-                                }
                             </div>
                         </EditForm>
 
@@ -285,15 +292,27 @@
             if (!isSupported)
             {
                 pushSubscriptionStatus = "not-supported";
+                Console.WriteLine("Push notifications not supported in this browser");
+                return;
+            }
+
+            var permissionStatus = await PushNotificationService.GetPermissionStatusAsync();
+            Console.WriteLine($"Notification permission status: {permissionStatus}");
+            
+            if (permissionStatus != "granted")
+            {
+                pushSubscriptionStatus = "not-subscribed";
                 return;
             }
 
             var subscription = await PushNotificationService.GetSubscriptionAsync();
             pushSubscriptionStatus = subscription != null ? "subscribed" : "not-subscribed";
+            Console.WriteLine($"Subscription status: {pushSubscriptionStatus}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error checking push subscription: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             pushSubscriptionStatus = "error";
         }
     }
@@ -303,51 +322,93 @@
         var isChecked = e.Value?.ToString() == "True";
         settings.EnablePushNotifications = isChecked;
         
-        if (isChecked)
-        {
-            // Check if already subscribed
-            await CheckPushSubscriptionStatus();
-        }
+        // Just check status, don't auto-subscribe
+        await CheckPushSubscriptionStatus();
     }
 
     private async Task SubscribeToPush()
     {
-        if (string.IsNullOrEmpty(currentUserId)) return;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Console.WriteLine("Cannot subscribe: currentUserId is null or empty");
+            return;
+        }
 
         isSubscribing = true;
+        saveMessage = null;
         try
         {
-            // Request permission first
-            var permissionGranted = await PushNotificationService.RequestPermissionAsync();
-            if (!permissionGranted)
+            Console.WriteLine("Starting push notification subscription process...");
+            
+            // Check if already subscribed
+            await CheckPushSubscriptionStatus();
+            if (pushSubscriptionStatus == "subscribed")
             {
-                saveMessage = "Notification permission denied. Please enable notifications in your browser settings.";
-                saveSuccess = false;
+                Console.WriteLine("Already subscribed, saving settings...");
+                // Already subscribed, just save settings
+                await SaveSettings();
                 return;
             }
 
-            // Subscribe
-            var subscription = await PushNotificationService.SubscribeAsync(currentUserId);
-            if (subscription != null)
+            // Request permission first
+            Console.WriteLine("Requesting notification permission...");
+            var permissionGranted = await PushNotificationService.RequestPermissionAsync();
+            if (!permissionGranted)
             {
-                pushSubscriptionStatus = "subscribed";
-                saveMessage = "Successfully subscribed to push notifications! You'll receive alerts even when the app is closed.";
-                saveSuccess = true;
+                Console.WriteLine("Notification permission denied");
+                settings.EnablePushNotifications = false;
+                pushSubscriptionStatus = "not-subscribed";
+                saveMessage = "Notification permission denied. Please enable notifications in your browser settings.";
+                saveSuccess = false;
+                StateHasChanged();
+                return;
             }
-            else
+
+            Console.WriteLine("Permission granted, subscribing to push...");
+            // Subscribe
+            try
             {
-                saveMessage = "Failed to subscribe to push notifications. Please try again.";
+                var subscription = await PushNotificationService.SubscribeAsync(currentUserId);
+                if (subscription != null)
+                {
+                    Console.WriteLine($"Successfully subscribed! Endpoint: {subscription.Endpoint}");
+                    pushSubscriptionStatus = "subscribed";
+                    // Keep checkbox checked since subscription succeeded
+                    settings.EnablePushNotifications = true;
+                    // Save settings with push notifications enabled
+                    await SaveSettings();
+                    saveMessage = "Web push notifications enabled! You'll receive alerts even when the app is closed.";
+                    saveSuccess = true;
+                }
+                else
+                {
+                    throw new Exception("Subscription returned null");
+                }
+            }
+            catch (Exception subEx)
+            {
+                Console.WriteLine($"Subscription error: {subEx.Message}");
+                // Don't uncheck the checkbox - keep it checked so user can try again
+                // settings.EnablePushNotifications = false; // Removed - keep checkbox checked
+                pushSubscriptionStatus = "not-subscribed";
+                saveMessage = $"Failed to enable push notifications: {subEx.Message}. Please check the browser console (F12) for more details. You can try subscribing again.";
                 saveSuccess = false;
             }
         }
         catch (Exception ex)
         {
-            saveMessage = $"Error subscribing: {ex.Message}";
+            Console.WriteLine($"Exception during subscription: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            // Don't uncheck the checkbox - keep it checked so user can try again
+            // settings.EnablePushNotifications = false; // Removed - keep checkbox checked
+            pushSubscriptionStatus = "not-subscribed";
+            saveMessage = $"Error enabling notifications: {ex.Message}. Please check the browser console (F12) for details. You can try subscribing again.";
             saveSuccess = false;
         }
         finally
         {
             isSubscribing = false;
+            StateHasChanged();
         }
     }
 
@@ -356,6 +417,7 @@
         if (string.IsNullOrEmpty(currentUserId)) return;
 
         isUnsubscribing = true;
+        saveMessage = null;
         try
         {
             var success = await PushNotificationService.UnsubscribeAsync(currentUserId);
@@ -363,23 +425,54 @@
             {
                 pushSubscriptionStatus = "not-subscribed";
                 settings.EnablePushNotifications = false;
-                saveMessage = "Successfully unsubscribed from push notifications.";
+                // Save settings with push notifications disabled
+                await SaveSettings();
+                saveMessage = "Web push notifications disabled.";
                 saveSuccess = true;
             }
             else
             {
-                saveMessage = "Failed to unsubscribe. Please try again.";
+                saveMessage = "Failed to disable notifications. Please try again.";
                 saveSuccess = false;
             }
         }
         catch (Exception ex)
         {
-            saveMessage = $"Error unsubscribing: {ex.Message}";
+            saveMessage = $"Error disabling notifications: {ex.Message}";
             saveSuccess = false;
         }
         finally
         {
             isUnsubscribing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RequestNotificationPermission()
+    {
+        try
+        {
+            var permissionGranted = await PushNotificationService.RequestPermissionAsync();
+            if (permissionGranted)
+            {
+                saveMessage = "Notification permission granted! You can now subscribe to push notifications.";
+                saveSuccess = true;
+                await CheckPushSubscriptionStatus();
+            }
+            else
+            {
+                saveMessage = "Notification permission denied. Please enable notifications in your browser settings.";
+                saveSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            saveMessage = $"Error requesting permission: {ex.Message}";
+            saveSuccess = false;
+        }
+        finally
+        {
+            StateHasChanged();
         }
     }
 
@@ -435,20 +528,5 @@
         }
     }
 
-    private async Task RequestNotificationPermission()
-    {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("eval", 
-                "if ('Notification' in window && Notification.permission === 'default') { Notification.requestPermission(); }");
-            saveMessage = "Notification permission requested. Please check your browser settings.";
-            saveSuccess = true;
-        }
-        catch (Exception ex)
-        {
-            saveMessage = $"Error requesting permission: {ex.Message}";
-            saveSuccess = false;
-        }
-    }
 }
 
