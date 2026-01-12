@@ -16,9 +16,12 @@
 <AuthorizeView>
     <Authorized>
 <div class="weather-container">
+    <div class="row g-4">
+        <!-- Left Column: Weather Content -->
+        <div class="col-lg-8 col-md-12">
             <div class="weather-header mb-4">
-                <h3 class="mb-3">Weather Information</h3>
-                <div class="d-flex gap-2 flex-wrap">
+                <h3 class="mb-3 text-center">Weather Information</h3>
+                <div class="d-flex gap-2 flex-wrap justify-content-center">
                     <button class="btn btn-outline-primary btn-sm" @onclick="GetCurrentLocationWeather" disabled="@isLoadingLocation">
                         @if (isLoadingLocation)
                         {
@@ -37,8 +40,8 @@
                 </div>
             </div>
     
-    <div class="search-section mb-4">
-        <div class="input-group">
+            <div class="search-section mb-4 w-100">
+                <div class="input-group justify-content-center">
                     <input @bind="searchCity" @bind:event="oninput" 
                            @onkeydown="HandleKeyPress" 
                            class="form-control" 
@@ -53,49 +56,8 @@
                             <text><i class="bi bi-search"></i> Get Weather</text>
                         }
                     </button>
-        </div>
-    </div>
-
-            <AuthorizeView>
-                <Authorized Context="authContext1">
-                    <div class="favorite-cities-section mb-4">
-                        <h5>Favorite Cities</h5>
-                        @if (favoriteCitiesLoading)
-                        {
-                            <div class="text-center">
-                                <div class="spinner-border spinner-border-sm"></div>
-                            </div>
-                        }
-                        else if (favoriteCities.Any())
-                        {
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var fav in favoriteCities)
-                                {
-                                    <button class="btn btn-sm btn-outline-info" @onclick="() => LoadFavoriteCity(fav.City, fav.Country)">
-                                        @fav.City, @fav.Country
-                                        <button class="btn-close btn-close-sm ms-2" @onclick="() => RemoveFavorite(fav.Id)" @onclick:stopPropagation="true"></button>
-                                    </button>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="text-muted small">No favorite cities yet. Add cities to your favorites!</p>
-                        }
-                    </div>
-                </Authorized>
-            </AuthorizeView>
-
-            <div class="popular-cities-section mb-4">
-        <label class="form-label">Quick pick a popular city</label>
-        <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
-        <select class="form-select city-select" size="5" @onchange="OnCitySelected">
-            @foreach (var city in FilteredCities)
-            {
-                <option value="@city">@city</option>
-            }
-        </select>
-    </div>
+                </div>
+            </div>
 
     @if (isLoading)
     {
@@ -229,18 +191,66 @@
                 }
             }
         </div>
+        
+        <!-- Right Column: Favorite Cities and Popular Cities (Sticky) -->
+        <div class="col-lg-4 col-md-12">
+            <div class="sticky-top" style="top: 20px;">
+                <AuthorizeView>
+                    <Authorized Context="authContext1">
+                        <div class="favorite-cities-section mb-4">
+                            <h5 class="text-center">Favorite Cities</h5>
+                            @if (favoriteCitiesLoading)
+                            {
+                                <div class="text-center">
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                </div>
+                            }
+                            else if (favoriteCities.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                    @foreach (var fav in favoriteCities)
+                                    {
+                                        <button class="btn btn-sm btn-outline-info" @onclick="() => LoadFavoriteCity(fav.City, fav.Country)">
+                                            @fav.City, @fav.Country
+                                            <button class="btn-close btn-close-sm ms-2" @onclick="() => RemoveFavorite(fav.Id)" @onclick:stopPropagation="true"></button>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted small text-center">No favorite cities yet. Add cities to your favorites!</p>
+                            }
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+                
+                <div class="popular-cities-section">
+                    <label class="form-label text-center d-block">Quick pick a popular city</label>
+                    <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
+                    <select class="form-select city-select" size="5" @onchange="OnCitySelected">
+                        @foreach (var city in FilteredCities)
+                        {
+                            <option value="@city">@city</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     </Authorized>
     <NotAuthorized>
 <div class="weather-container">
-            <div class="alert alert-info">
+            <div class="alert alert-info text-center">
                 <h5>Welcome to Weather App!</h5>
                 <p>Sign in to access advanced features like favorite cities, extended forecasts, and personalized dashboard.</p>
                 <a href="/auth" class="btn btn-primary">Sign In</a>
             </div>
             
             <div class="weather-header mb-4">
-                <h3 class="mb-3">Weather Information</h3>
-                <div class="d-flex gap-2">
+                <h3 class="mb-3 text-center">Weather Information</h3>
+                <div class="d-flex gap-2 justify-content-center">
                     <button class="btn btn-outline-primary btn-sm" @onclick="GetCurrentLocationWeather" disabled="@isLoadingLocation">
                         @if (isLoadingLocation)
                         {
@@ -259,8 +269,11 @@
                 </div>
             </div>
     
-    <div class="search-section mb-4">
-        <div class="input-group">
+    <div class="row g-4">
+        <!-- Left Column: Weather Content -->
+        <div class="col-lg-8 col-md-12">
+            <div class="search-section mb-4 w-100">
+                <div class="input-group justify-content-center">
                     <input @bind="searchCity" @bind:event="oninput" 
                            @onkeydown="HandleKeyPress" 
                            class="form-control" 
@@ -275,46 +288,35 @@
                             <text><i class="bi bi-search"></i> Get Weather</text>
                         }
                     </button>
-        </div>
-    </div>
+                </div>
+            </div>
 
-            <div class="popular-cities-section mb-4">
-        <label class="form-label">Quick pick a popular city</label>
-        <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
-        <select class="form-select city-select" size="5" @onchange="OnCitySelected">
-            @foreach (var city in FilteredCities)
+            @if (isLoading)
             {
-                <option value="@city">@city</option>
-            }
-        </select>
-    </div>
-
-    @if (isLoading)
-    {
                 <div class="alert alert-info text-center">
                     <div class="spinner-border me-2"></div>
                     Loading weather data...
                 </div>
-    }
+            }
 
-    @if (errorMessage != null)
-    {
+            @if (errorMessage != null)
+            {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     @errorMessage
                     <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
                 </div>
-    }
+            }
 
-    @if (currentWeather != null)
-    {
+            @if (currentWeather != null)
+            {
                 <WeatherAlerts CurrentWeather="currentWeather" ForecastData="forecastData" />
                 
-                <div class="weather-card current-weather">
+                <div class="weather-card current-weather w-100">
                     <div class="weather-card-header">
-            <h4>@currentWeather.City, @currentWeather.Country</h4>
+            <h4 class="text-center">@currentWeather.City, @currentWeather.Country</h4>
                     </div>
                     
-                    <div class="weather-main">
+                    <div class="weather-main justify-content-center">
                         <div class="weather-icon">
                             @if (!string.IsNullOrEmpty(currentWeather.Icon))
                             {
@@ -350,9 +352,25 @@
                                 <div class="detail-value">@currentWeather.Pressure.ToString("F0") hPa</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <!-- Right Column: Popular Cities (Sticky) -->
+        <div class="col-lg-4 col-md-12">
+            <div class="popular-cities-section sticky-top" style="top: 20px;">
+                <label class="form-label text-center d-block">Quick pick a popular city</label>
+                <input @bind="cityFilter" @bind:event="oninput" class="form-control mb-2" placeholder="Search within popular cities" />
+                <select class="form-select city-select" size="5" @onchange="OnCitySelected">
+                    @foreach (var city in FilteredCities)
+                    {
+                        <option value="@city">@city</option>
+                    }
+                </select>
             </div>
         </div>
-    }
+    </div>
 </div>
     </NotAuthorized>
 </AuthorizeView>
@@ -568,6 +586,13 @@
         border-radius: var(--radius-md, 12px);
         padding: 1.5rem;
         box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+    
+    .popular-cities-section.sticky-top {
+        position: sticky;
+        z-index: 10;
     }
 
     .popular-cities-section label {
