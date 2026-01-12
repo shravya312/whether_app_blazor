@@ -7,44 +7,50 @@
 
 <PageTitle>Weather Analytics - Weather App</PageTitle>
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex align-items-center mb-4">
+<div class="page-container">
+    <div class="d-flex align-items-center justify-content-center mb-4">
         <i class="bi bi-graph-up me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
-        <div>
+        <div class="text-center">
             <h2 class="mb-0 fw-bold text-primary-modern">Weather Analytics</h2>
             <p class="text-secondary-modern mb-0">Compare cities and analyze weather trends</p>
         </div>
     </div>
     
-    <div class="row mb-4">
+    <div class="row mb-4 justify-content-center">
         <div class="col-md-6">
-            <div class="modern-card">
-                <h5 class="mb-4 text-primary-modern fw-bold">Compare Cities</h5>
+            <div class="modern-card mx-auto section-container">
+                <h5 class="mb-4 text-primary-modern fw-bold text-center">Compare Cities</h5>
                     <div class="mb-3">
-                        <label class="form-label text-primary-modern">City 1</label>
-                        <input @bind="city1" class="form-control-modern" placeholder="Enter city name" />
+                        <label class="form-label text-primary-modern text-center d-block">City 1</label>
+                        <div class="d-flex justify-content-center">
+                            <input @bind="city1" class="form-control-modern" placeholder="Enter city name" style="max-width: 400px; width: 100%;" />
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-primary-modern">City 2</label>
-                        <input @bind="city2" class="form-control-modern" placeholder="Enter city name" />
+                        <label class="form-label text-primary-modern text-center d-block">City 2</label>
+                        <div class="d-flex justify-content-center">
+                            <input @bind="city2" class="form-control-modern" placeholder="Enter city name" style="max-width: 400px; width: 100%;" />
+                        </div>
                     </div>
-                    <button class="btn-modern" @onclick="CompareCities" disabled="@isComparing">
-                        @if (isComparing)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                        }
-                        Compare
-                    </button>
+                    <div class="text-center">
+                        <button class="btn-modern" @onclick="CompareCities" disabled="@isComparing">
+                            @if (isComparing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Compare
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
     @if (comparisonData.Any())
     {
-        <div class="modern-card mb-4">
-            <h5 class="mb-4 text-primary-modern fw-bold">City Comparison</h5>
+        <div class="modern-card mb-4 mx-auto section-container">
+            <h5 class="mb-4 text-primary-modern fw-bold text-center">City Comparison</h5>
             <div class="table-responsive">
-                <table class="table" style="color: var(--text-primary);">
+                <table class="table text-center" style="color: var(--text-primary);">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--border-color);">
                                 <th style="color: var(--text-primary);">Metric</th>
@@ -110,8 +116,8 @@
             var cityKey = forecastEntry.Key;
             var forecastData = forecastEntry.Value;
             
-            <div class="modern-card mb-4">
-                <h5 class="mb-4 text-primary-modern fw-bold">Temperature Trends - @cityKey</h5>
+            <div class="modern-card mb-4 mx-auto section-container">
+                <h5 class="mb-4 text-primary-modern fw-bold text-center">Temperature Trends - @cityKey</h5>
                     <div class="temperature-chart">
                         @foreach (var item in forecastData.Items.Take(40).GroupBy(f => f.DateTime.Date).Take(5))
                         {
@@ -120,9 +126,9 @@
                             var minTemp = dayItems.Min(f => f.MinTemperature);
                             var maxTemp = dayItems.Max(f => f.MaxTemperature);
                             <div class="day-trend mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <strong>@dayItems.First().DateTime.ToString("dddd, MMM dd")</strong>
-                                    <span>Avg: @avgTemp.ToString("F1")°C</span>
+                                <div class="d-flex justify-content-center align-items-center mb-2">
+                                    <strong class="text-center">@dayItems.First().DateTime.ToString("dddd, MMM dd")</strong>
+                                    <span class="ms-2">Avg: @avgTemp.ToString("F1")°C</span>
                                 </div>
                                 <div class="progress" style="height: 30px;">
                                     <div class="progress-bar bg-info" role="progressbar" 
@@ -147,7 +153,7 @@
                 </div>
         }
 
-        <div class="row">
+        <div class="row justify-content-center">
             @foreach (var forecastEntry in forecastDataDict)
             {
                 var cityKey = forecastEntry.Key;
@@ -155,8 +161,8 @@
                 
                 <div class="col-md-6 mb-3">
                     <div class="modern-card">
-                        <h5 class="mb-4 text-primary-modern fw-bold">Humidity Patterns - @cityKey</h5>
-                            <div class="humidity-stats">
+                        <h5 class="mb-4 text-primary-modern fw-bold text-center">Humidity Patterns - @cityKey</h5>
+                            <div class="humidity-stats text-center">
                                 @{
                                     var avgHumidity = forecastData.Items.Average(f => f.Humidity);
                                     var maxHumidity = forecastData.Items.Max(f => f.Humidity);
@@ -171,7 +177,7 @@
             }
         </div>
 
-        <div class="row">
+        <div class="row justify-content-center">
             @foreach (var forecastEntry in forecastDataDict)
             {
                 var cityKey = forecastEntry.Key;
@@ -179,8 +185,8 @@
                 
                 <div class="col-md-6 mb-3">
                     <div class="modern-card">
-                        <h5 class="mb-4 text-primary-modern fw-bold">Precipitation Analysis - @cityKey</h5>
-                            <div class="precipitation-stats">
+                        <h5 class="mb-4 text-primary-modern fw-bold text-center">Precipitation Analysis - @cityKey</h5>
+                            <div class="precipitation-stats text-center">
                                 @{
                                     var totalPrecipitation = forecastData.Items
                                         .Where(f => f.Precipitation.HasValue)
