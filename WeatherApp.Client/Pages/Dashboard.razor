@@ -25,15 +25,15 @@
     
     @if (favoriteCitiesAlerts.Any())
     {
-        <div class="modern-card mb-4 mx-auto section-container" style="border-left: 4px solid #f59e0b;">
+        <div class="modern-card mb-4 mx-auto section-container" style="border-left: 4px solid var(--warning-color);">
             <div class="d-flex align-items-center justify-content-center mb-3">
-                <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem; color: var(--warning-color);"></i>
                 <h5 class="mb-0 fw-bold text-primary-modern">Weather Alerts</h5>
             </div>
             <div class="alert-list">
                 @foreach (var alert in favoriteCitiesAlerts.OrderByDescending(a => a.Severity).Take(5))
                 {
-                    <div class="modern-card mb-2 text-center" style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b;">
+                    <div class="modern-card mb-2 text-center" style="background: rgba(249, 115, 22, 0.15); border-left: 3px solid var(--warning-color);">
                         <div class="d-flex flex-column align-items-center">
                             <div class="mb-2">
                                 <strong class="text-primary-modern d-block">@alert.City, @alert.Country:</strong>
@@ -42,7 +42,7 @@
                                     <i class="bi bi-clock"></i> @alert.Timestamp.ToLocalTime().ToString("g")
                                 </small>
                             </div>
-                            <span class="badge" style="background: #f59e0b; color: #000;">@alert.Severity</span>
+                            <span class="badge" style="background: var(--warning-color); color: #ffffff;">@alert.Severity</span>
                         </div>
                     </div>
                 }
