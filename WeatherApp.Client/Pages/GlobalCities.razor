@@ -80,12 +80,6 @@
                             Updated @weather.Timestamp.ToLocalTime().ToString("g")
                         </small>
                     </div>
-                    
-                    <div class="mt-3">
-                        <button class="btn-modern w-100" @onclick="() => ViewCityDetails(weather.City, weather.Country)">
-                            <i class="bi bi-eye"></i> View Details
-                        </button>
-                    </div>
                 </div>
             }
         </div>
@@ -267,14 +261,5 @@
             isLoading = false;
         }
     }
-
-    private void ViewCityDetails(string city, string country)
-    {
-        // Navigate to home page with city search
-        Navigation.NavigateTo($"/?city={Uri.EscapeDataString(city)}&country={Uri.EscapeDataString(country)}");
-    }
-
-    [Inject]
-    private NavigationManager Navigation { get; set; } = default!;
 }
 

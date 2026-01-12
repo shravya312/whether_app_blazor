@@ -7,14 +7,14 @@
 
 <PageTitle>Profile - Weather App</PageTitle>
 
-<div class="container-fluid px-4 py-4">
+<div class="page-container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="d-flex align-items-center mb-4">
+            <div class="d-flex align-items-center justify-content-center mb-4">
                 <i class="bi bi-person-circle me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
-                <div>
-                    <h2 class="mb-0 fw-bold text-primary-modern">Profile Management</h2>
-                    <p class="text-secondary-modern mb-0">View and manage your account information</p>
+                <div class="text-center">
+                    <h2 class="mb-0 fw-bold text-primary-modern">User Information</h2>
+                    <p class="text-secondary-modern mb-0">View your account details</p>
                 </div>
             </div>
             
@@ -27,34 +27,34 @@
             }
             else if (currentUser != null)
             {
-                <div class="modern-card">
-                    <h5 class="mb-4 text-primary-modern fw-bold">User Information</h5>
+                <div class="modern-card mx-auto section-container">
+                    <h5 class="mb-4 text-primary-modern fw-bold text-center">Current User</h5>
                     
                     <div class="profile-info-grid">
                         <div class="info-box">
-                            <label class="form-label text-primary-modern fw-bold">Email</label>
-                            <input type="email" class="form-control-modern" value="@currentUser.Email" readonly />
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">Email</label>
+                            <input type="email" class="form-control-modern text-center" value="@currentUser.Email" readonly />
                         </div>
 
                         <div class="info-box">
-                            <label class="form-label text-primary-modern fw-bold">User ID</label>
-                            <input type="text" class="form-control-modern" value="@currentUser.Id" readonly />
-                            <small class="text-muted-modern">This is your unique identifier</small>
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">User ID</label>
+                            <input type="text" class="form-control-modern text-center" value="@currentUser.Id" readonly />
+                            <small class="text-muted-modern text-center d-block">This is your unique identifier</small>
                         </div>
 
                         <div class="info-box">
-                            <label class="form-label text-primary-modern fw-bold">Account Created</label>
-                            <input type="text" class="form-control-modern" value="@(currentUser.CreatedAt.ToString("g"))" readonly />
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">Account Created</label>
+                            <input type="text" class="form-control-modern text-center" value="@(currentUser.CreatedAt.ToString("g"))" readonly />
                         </div>
 
                         <div class="info-box">
-                            <label class="form-label text-primary-modern fw-bold">Last Sign In</label>
-                            <input type="text" class="form-control-modern" value="@(currentUser.LastSignInAt?.ToString("g") ?? "Never")" readonly />
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">Last Sign In</label>
+                            <input type="text" class="form-control-modern text-center" value="@(currentUser.LastSignInAt?.ToString("g") ?? "Never")" readonly />
                         </div>
 
                         <div class="info-box">
-                            <label class="form-label text-primary-modern fw-bold">Email Confirmed</label>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">Email Confirmed</label>
+                            <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
                                 @if (currentUser.EmailConfirmedAt.HasValue)
                                 {
                                     <span class="badge" style="background: #10b981; color: #fff;">Confirmed</span>
@@ -72,14 +72,14 @@
                     @if (currentUser.UserMetadata != null && currentUser.UserMetadata.Any())
                     {
                         <div class="mb-4">
-                            <label class="form-label text-primary-modern fw-bold">Additional Information</label>
+                            <label class="form-label text-primary-modern fw-bold text-center d-block">Additional Information</label>
                             <div class="modern-card" style="background: rgba(255, 255, 255, 0.03);">
-                                <pre class="mb-0 text-secondary-modern" style="white-space: pre-wrap; word-wrap: break-word;">@System.Text.Json.JsonSerializer.Serialize(currentUser.UserMetadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                <pre class="mb-0 text-secondary-modern" style="white-space: pre-wrap; word-wrap: break-word; text-align: left; font-family: 'Courier New', monospace; padding: 1rem; overflow-x: auto;">@System.Text.Json.JsonSerializer.Serialize(currentUser.UserMetadata, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
                             </div>
                         </div>
                     }
 
-                    <div class="d-flex gap-2 mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
+                    <div class="d-flex gap-2 justify-content-center mt-4 pt-4" style="border-top: 1px solid var(--border-color);">
                         <button class="btn-modern" @onclick="RefreshProfile">
                             <i class="bi bi-arrow-clockwise"></i> Refresh
                         </button>
@@ -91,7 +91,7 @@
             }
             else
             {
-                <div class="modern-card">
+                <div class="modern-card mx-auto section-container text-center">
                     <div class="alert alert-warning">
                         <p class="text-primary-modern mb-3">Unable to load profile information. Please try again.</p>
                         <button class="btn-modern" @onclick="RefreshProfile">Retry</button>
@@ -104,16 +104,20 @@
 
 <style>
     .profile-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        display: flex;
+        flex-direction: column;
         gap: 1.5rem;
         margin-bottom: 2rem;
+        align-items: center;
     }
     
     .info-box {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        width: 100%;
+        max-width: 600px;
+        align-items: center;
     }
     
     .info-box .form-label {
@@ -121,28 +125,30 @@
         font-size: 0.875rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        text-align: center;
+        width: 100%;
     }
     
     .info-box .form-control-modern {
         width: 100%;
         min-height: 42px;
+        text-align: center;
     }
     
     .info-box small {
         font-size: 0.75rem;
         margin-top: 0.25rem;
+        text-align: center;
+        width: 100%;
     }
     
     @@media (max-width: 768px) {
         .profile-info-grid {
-            grid-template-columns: 1fr;
             gap: 1rem;
         }
-    }
-    
-    @@media (min-width: 1200px) {
-        .profile-info-grid {
-            grid-template-columns: repeat(3, 1fr);
+        
+        .info-box {
+            max-width: 100%;
         }
     }
 </style>
