@@ -18,8 +18,9 @@
     width: 1.25rem;
     height: 1.25rem;
     margin-right: 0.75rem;
-    top: -1px;
+    top: 0;
     background-size: cover;
+    vertical-align: baseline;
 }
 
 .bi-house-door-fill-nav-menu {
@@ -48,38 +49,123 @@
     }
 
     .nav-item ::deep a {
-        color: var(--text-secondary, #a0aec0);
+        color: #ffffff !important;
         border-radius: 12px;
         height: 3.5rem;
-        display: flex;
-        align-items: center;
-        line-height: 3.5rem;
+        display: flex !important;
+        align-items: center !important;
+        align-content: center !important;
+        justify-content: flex-start !important;
+        line-height: 1 !important;
         padding: 0 1rem;
         margin: 0.25rem 0;
         transition: all 0.3s ease;
         font-weight: 500;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    
+    /* Ensure perfect vertical alignment - all children on same baseline */
+    .nav-item ::deep a > * {
+        display: inline-flex !important;
+        align-items: center !important;
+        vertical-align: middle !important;
+        line-height: 1 !important;
+    }
+    
+    /* Force alignment with maximum specificity */
+    nav .nav-item ::deep a,
+    nav .nav-item ::deep .nav-link {
+        display: flex !important;
+        align-items: center !important;
+        line-height: 1 !important;
+    }
+    
+    nav .nav-item ::deep a i,
+    nav .nav-item ::deep .nav-link i {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.5rem !important;
+        height: 1.2rem !important;
+        line-height: 1.2rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        vertical-align: middle !important;
+    }
+    
+    nav .nav-item ::deep a span,
+    nav .nav-item ::deep .nav-link span {
+        display: inline-flex !important;
+        align-items: center !important;
+        line-height: 1.2rem !important;
+        height: 1.2rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        vertical-align: middle !important;
+        color: #ffffff !important;
     }
 
 .nav-item ::deep a i {
-    font-size: 1.2rem;
-    margin-right: 0.75rem;
-    width: 1.5rem;
-    text-align: center;
+    font-size: 1.2rem !important;
+    width: 1.5rem !important;
+    height: 1.2rem !important;
+    min-height: 1.2rem !important;
+    max-height: 1.2rem !important;
+    text-align: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    color: #ffffff !important;
+    line-height: 1.2rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+}
+
+.nav-item ::deep a span {
+    display: inline-flex !important;
+    align-items: center !important;
+    color: #ffffff !important;
+    white-space: nowrap !important;
+    flex: 1;
+    opacity: 1 !important;
+    visibility: visible !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2rem !important;
+    height: 1.2rem !important;
+    min-height: 1.2rem !important;
+    max-height: 1.2rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
 }
 
 .nav-item ::deep a.active {
-    background: rgba(102, 126, 234, 0.2);
-    color: var(--accent-primary, #667eea);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    background: rgba(79, 70, 229, 0.25) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
     transform: translateX(4px);
-    border-left: 3px solid var(--accent-primary, #667eea);
+    border-left: 3px solid var(--accent-primary, #4f46e5);
+}
+
+.nav-item ::deep a.active i,
+.nav-item ::deep a.active span {
+    color: #ffffff !important;
 }
 
 .nav-item ::deep a:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary, #ffffff);
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
     transform: translateX(4px);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item ::deep a:hover i,
+.nav-item ::deep a:hover span {
+    color: #ffffff !important;
 }
 
 @media (min-width: 641px) {

@@ -57,6 +57,38 @@
     </nav>
 </div>
 
+<style>
+    /* Force alignment with highest specificity */
+    .nav-item ::deep a {
+        display: flex !important;
+        align-items: center !important;
+        line-height: 1 !important;
+    }
+    
+    .nav-item ::deep a i {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.5rem !important;
+        height: 1.2rem !important;
+        line-height: 1.2rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        vertical-align: middle !important;
+    }
+    
+    .nav-item ::deep a span {
+        display: inline-flex !important;
+        align-items: center !important;
+        line-height: 1.2rem !important;
+        height: 1.2rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        vertical-align: middle !important;
+        color: #ffffff !important;
+    }
+</style>
+
 @code {
     private bool collapseNavMenu = true;
 

@@ -1053,3 +1053,52 @@ li {
     margin-bottom: 0.5rem !important;
 }
 
+/* Navigation Menu Alignment - Force perfect alignment */
+.sidebar nav .nav-item a,
+.sidebar nav .nav-item .nav-link,
+.sidebar .nav-item a,
+.sidebar .nav-item .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+}
+
+.sidebar nav .nav-item a i,
+.sidebar nav .nav-item .nav-link i,
+.sidebar .nav-item a i,
+.sidebar .nav-item .nav-link i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1.5rem !important;
+    height: 1.2rem !important;
+    min-height: 1.2rem !important;
+    max-height: 1.2rem !important;
+    line-height: 1.2rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+}
+
+.sidebar nav .nav-item a span,
+.sidebar nav .nav-item .nav-link span,
+.sidebar .nav-item a span,
+.sidebar .nav-item .nav-link span {
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 1.2rem !important;
+    height: 1.2rem !important;
+    min-height: 1.2rem !important;
+    max-height: 1.2rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: middle !important;
+    color: #ffffff !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    white-space: nowrap !important;
+}
+
