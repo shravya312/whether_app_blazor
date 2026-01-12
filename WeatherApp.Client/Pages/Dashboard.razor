@@ -14,10 +14,10 @@
 
 <PageTitle>Dashboard - Weather App</PageTitle>
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex align-items-center mb-4">
+<div class="page-container">
+    <div class="d-flex align-items-center justify-content-center mb-4">
         <i class="bi bi-speedometer2 me-3" style="font-size: 2rem; color: var(--accent-primary);"></i>
-        <div>
+        <div class="text-center">
             <h2 class="mb-0 fw-bold text-primary-modern">Your Weather Dashboard</h2>
             <p class="text-secondary-modern mb-0">Monitor your favorite cities at a glance</p>
         </div>
@@ -25,18 +25,18 @@
     
     @if (favoriteCitiesAlerts.Any())
     {
-        <div class="modern-card mb-4" style="border-left: 4px solid #f59e0b;">
-            <div class="d-flex align-items-center mb-3">
+        <div class="modern-card mb-4 mx-auto section-container" style="border-left: 4px solid #f59e0b;">
+            <div class="d-flex align-items-center justify-content-center mb-3">
                 <i class="bi bi-exclamation-triangle-fill me-2" style="font-size: 1.5rem; color: #f59e0b;"></i>
                 <h5 class="mb-0 fw-bold text-primary-modern">Weather Alerts</h5>
             </div>
             <div class="alert-list">
                 @foreach (var alert in favoriteCitiesAlerts.OrderByDescending(a => a.Severity).Take(5))
                 {
-                    <div class="modern-card mb-2" style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b;">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <strong class="text-primary-modern">@alert.City, @alert.Country:</strong>
+                    <div class="modern-card mb-2 text-center" style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b;">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="mb-2">
+                                <strong class="text-primary-modern d-block">@alert.City, @alert.Country:</strong>
                                 <p class="mb-1 mt-1 text-secondary-modern">@alert.Message</p>
                                 <small class="text-muted-modern">
                                     <i class="bi bi-clock"></i> @alert.Timestamp.ToLocalTime().ToString("g")
@@ -67,7 +67,7 @@
     }
     else if (favoriteCities.Any())
     {
-        <div class="widget-grid">
+        <div class="widget-grid mx-auto section-container">
             @foreach (var favCity in favoriteCities)
             {
                 <div class="weather-widget fade-in">
@@ -160,7 +160,7 @@
     }
     else
     {
-        <div class="modern-card text-center py-5">
+        <div class="modern-card text-center py-5 mx-auto section-container">
             <i class="bi bi-inbox mb-3" style="font-size: 3rem; color: var(--text-secondary);"></i>
             <h5 class="fw-bold text-primary-modern">No favorite cities yet!</h5>
             <p class="text-secondary-modern">Start by adding cities to your favorites from the home page to see them here.</p>
