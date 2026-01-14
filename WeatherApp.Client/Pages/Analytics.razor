@@ -157,11 +157,23 @@
                                     // Calculate position from bottom (0% = bottom, 100% = top)
                                     // Since overallMin = 0, this simplifies to: (value / overallRange) * 100
                                     var labelPosition = (value / overallRange) * 100;
-                                    <div class="y-axis-label" style="position: absolute; bottom: @labelPosition.ToString("F2")%; transform: translateY(50%); margin-top: -0.5em;">@value.ToString("F0")°C</div>
+                                    // Position labels below the grid line (top of label aligns with grid line)
+                                    <div class="y-axis-label" style="position: absolute; bottom: @labelPosition.ToString("F2")%; transform: translateY(100%);">@value.ToString("F0")°C</div>
                                 }
                             </div>
                             
                             <div class="chart-area">
+                                <!-- Y-axis line -->
+                                <div class="y-axis-line"></div>
+                                <!-- X-axis line (baseline at 0°C) -->
+                                <div class="x-axis-line"></div>
+                                <!-- Grid lines for Y-axis -->
+                                @for (int i = 0; i <= yAxisSteps; i++)
+                                {
+                                    var value = overallMin + (stepValue * i);
+                                    var gridPosition = (value / overallRange) * 100;
+                                    <div class="grid-line" style="bottom: @gridPosition.ToString("F2")%;"></div>
+                                }
                                 <div class="bars-container">
                                     @foreach (var item in forecastData.Items.Take(40).GroupBy(f => f.DateTime.Date).Take(5))
                                     {
@@ -173,10 +185,10 @@
                                         var dayDate = dayItems.First().DateTime.ToString("MMM dd");
                                         
                                         // Calculate bar heights as percentages of the chart height
-                                        // Ensure we're using the same overallMin and overallRange
-                                        var minHeight = ((minTemp - overallMin) / overallRange) * 100;
-                                        var avgHeight = ((avgTemp - overallMin) / overallRange) * 100;
-                                        var maxHeight = ((maxTemp - overallMin) / overallRange) * 100;
+                                        // Since overallMin = 0, this simplifies to: (temp / overallRange) * 100
+                                        var minHeight = (minTemp / overallRange) * 100;
+                                        var avgHeight = (avgTemp / overallRange) * 100;
+                                        var maxHeight = (maxTemp / overallRange) * 100;
                                         
                                         // Ensure heights are within valid range
                                         minHeight = Math.Max(0, Math.Min(100, minHeight));
@@ -274,7 +286,7 @@
     .chart-container {
         display: flex;
         gap: 1rem;
-        align-items: stretch;
+        align-items: flex-start;
         min-height: 500px;
         height: 500px;
     }
@@ -284,6 +296,7 @@
         padding-right: 0.5rem;
         min-width: 60px;
         height: 500px;
+        flex-shrink: 0;
     }
 
     .y-axis-label {
@@ -292,14 +305,49 @@
         text-align: right;
         padding-right: 0.5rem;
         white-space: nowrap;
-        line-height: 1;
+        line-height: 1.2;
+        margin: 0;
     }
 
     .chart-area {
         flex: 1;
         position: relative;
         height: 500px;
-        padding-bottom: 0;
+        padding: 0;
+        margin: 0;
+        display: block;
+        border-left: 2px solid var(--border-color, rgba(255, 255, 255, 0.3));
+        border-bottom: 2px solid var(--border-color, rgba(255, 255, 255, 0.3));
+    }
+
+    .y-axis-line {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color, rgba(255, 255, 255, 0.3));
+        z-index: 1;
+    }
+
+    .x-axis-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: var(--border-color, rgba(255, 255, 255, 0.3));
+        z-index: 1;
+    }
+
+    .grid-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--border-color, rgba(255, 255, 255, 0.1));
+        z-index: 0;
+        pointer-events: none;
     }
 
     .bars-container {
@@ -309,8 +357,14 @@
         height: 500px;
         gap: 1rem;
         padding: 0 1rem;
+        padding-left: 2px;
         padding-bottom: 0;
-        position: relative;
+        margin: 0;
+        position: absolute;
+        bottom: 0;
+        left: 2px;
+        right: 0;
+        z-index: 2;
     }
 
     .bar-group {
@@ -319,6 +373,9 @@
         align-items: center;
         flex: 1;
         max-width: 120px;
+        height: 500px;
+        position: relative;
+        justify-content: flex-end;
     }
 
     .bar-wrapper {
@@ -330,6 +387,8 @@
         height: 500px;
         position: relative;
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
     }
 
     .vertical-bar {
@@ -344,7 +403,15 @@
         padding-top: 0.25rem;
         cursor: pointer;
         box-sizing: border-box;
-        margin-bottom: 0;
+        margin: 0;
+        padding-bottom: 0;
+        align-self: flex-end;
+    }
+    
+    .vertical-bar:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
     .vertical-bar:hover {
@@ -385,6 +452,12 @@
         margin-top: 0.5rem;
         text-align: center;
         color: var(--text-primary, #ffffff);
+        position: absolute;
+        bottom: -2.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        width: 100%;
     }
 
     .day-name {
