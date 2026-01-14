@@ -1,0 +1,38 @@
+{
+  "MongoDB": {
+    "ConnectionString": "YOUR_MONGODB_CONNECTION_STRING",
+    "DatabaseName": "WeatherApp"
+  },
+  "WeatherApi": {
+    "Key": "YOUR_OPENWEATHERMAP_API_KEY"
+  },
+  "Email": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": "587",
+    "FromEmail": "YOUR_EMAIL@gmail.com",
+    "FromPassword": "YOUR_APP_PASSWORD",
+    "FromName": "Weather App"
+  },
+  "PushNotifications": {
+    "VapidPublicKey": "YOUR_VAPID_PUBLIC_KEY",
+    "VapidPrivateKey": "YOUR_VAPID_PRIVATE_KEY",
+    "VapidSubject": "mailto:YOUR_EMAIL@gmail.com"
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "https://your-client.onrender.com",
+      "http://localhost:5249",
+      "https://localhost:7064"
+    ]
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "WeatherApp.API.Services.EmailService": "Information",
+      "WeatherApp.API.Controllers.NotificationsController": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+

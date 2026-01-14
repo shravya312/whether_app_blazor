@@ -12,13 +12,32 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorClient", policy =>
     {
-        policy.WithOrigins(
-                "https://localhost:7064",  // Client HTTPS
-                "http://localhost:5249",     // Client HTTP
-                "https://localhost:7001",    // Alternative client ports
-                "http://localhost:5001",
-                "http://localhost:5249",     // Ensure HTTP is allowed
-                "https://localhost:5249")     // HTTPS variant
+        var allowedOrigins = new List<string>
+        {
+            "https://localhost:7064",  // Client HTTPS
+            "http://localhost:5249",     // Client HTTP
+            "https://localhost:7001",    // Alternative client ports
+            "http://localhost:5001",
+            "https://localhost:5249"     // HTTPS variant
+        };
+
+        // Add Render client URL from environment variable if set
+        var renderClientUrl = builder.Configuration["RENDER_CLIENT_URL"];
+        if (!string.IsNullOrEmpty(renderClientUrl))
+        {
+            allowedOrigins.Add(renderClientUrl);
+            allowedOrigins.Add(renderClientUrl.Replace("https://", "http://"));
+            allowedOrigins.Add(renderClientUrl.Replace("http://", "https://"));
+        }
+
+        // Add any additional origins from configuration
+        var additionalOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (additionalOrigins != null)
+        {
+            allowedOrigins.AddRange(additionalOrigins);
+        }
+
+        policy.WithOrigins(allowedOrigins.ToArray())
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

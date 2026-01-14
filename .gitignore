@@ -121,6 +121,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+## Test Projects (keep locally, exclude from repo)
+**/WeatherApp.Tests
+
 ## Documentation Files (keep locally, exclude from repo)
 *.md
 !README.md

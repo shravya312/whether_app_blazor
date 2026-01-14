@@ -1,0 +1,28 @@
+# Use the official .NET 8 SDK image for building
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj files and restore dependencies
+COPY WeatherApp.Client/WeatherApp.Client.csproj WeatherApp.Client/
+RUN dotnet restore WeatherApp.Client/WeatherApp.Client.csproj
+
+# Copy everything else and build
+COPY . .
+WORKDIR /src/WeatherApp.Client
+RUN dotnet build -c Release -o /app/build
+
+# Publish the app
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Copy published app
+COPY --from=publish /app/publish .
+
+ENTRYPOINT ["dotnet", "WeatherApp.Client.dll"]
+

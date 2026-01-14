@@ -1,0 +1,59 @@
+services:
+  # API Service (Backend)
+  - type: web
+    name: weather-app-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile.API
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:$PORT
+      - key: MongoDB__ConnectionString
+        sync: false
+      - key: MongoDB__DatabaseName
+        value: WeatherApp
+      - key: WeatherApi__Key
+        sync: false
+      - key: Email__SmtpServer
+        value: smtp.gmail.com
+      - key: Email__SmtpPort
+        value: "587"
+      - key: Email__FromEmail
+        sync: false
+      - key: Email__FromPassword
+        sync: false
+      - key: Email__FromName
+        value: Weather App
+      - key: PushNotifications__VapidPublicKey
+        sync: false
+      - key: PushNotifications__VapidPrivateKey
+        sync: false
+      - key: PushNotifications__VapidSubject
+        sync: false
+      # Note: Set RENDER_CLIENT_URL manually after client is deployed
+      - key: RENDER_CLIENT_URL
+        sync: false
+
+  # Client Service (Frontend)
+  - type: web
+    name: weather-app-client
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile.Client
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:$PORT
+      # Note: Set ApiBaseUrl manually after API is deployed (e.g., https://weather-app-api.onrender.com)
+      - key: ApiBaseUrl
+        sync: false
+      - key: Supabase__Url
+        sync: false
+      - key: Supabase__Key
+        sync: false
+
