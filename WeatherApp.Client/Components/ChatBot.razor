@@ -3,19 +3,25 @@
 @inject SupabaseService SupabaseService
 @inject IJSRuntime JSRuntime
 
-<div class="chatbot-container">
-    <div class="chatbot-header" @onclick="ToggleChat">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-chat-dots-fill"></i>
-            <span>Weather Assistant</span>
-        </div>
-        <button class="btn btn-sm btn-link text-white" @onclick="ToggleChat" @onclick:stopPropagation="true">
-            <i class="bi @(isOpen ? "bi-chevron-down" : "bi-chevron-up")"></i>
-        </button>
-    </div>
+<!-- Chatbot Icon Button -->
+<button class="chatbot-icon-btn" @onclick="ToggleChat" title="Weather Assistant">
+    <i class="bi bi-chat-dots-fill"></i>
+</button>
 
-    @if (isOpen)
-    {
+<!-- Chatbot Window -->
+@if (isOpen)
+{
+    <div class="chatbot-window">
+        <div class="chatbot-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span>Weather Assistant</span>
+            </div>
+            <button class="btn btn-sm btn-link text-white" @onclick="ToggleChat" @onclick:stopPropagation="true">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
         <div class="chatbot-messages" @ref="messagesContainer">
             @foreach (var message in messages)
             {
@@ -63,13 +69,44 @@
                 }
             </button>
         </div>
-    }
-</div>
+    </div>
+}
 
 <style>
-    .chatbot-container {
+    /* Chatbot Icon Button */
+    .chatbot-icon-btn {
         position: fixed;
         bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-primary, #667eea), var(--accent-secondary, #764ba2));
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.5));
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chatbot-icon-btn:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-lg, 0 12px 40px rgba(102, 126, 234, 0.6));
+    }
+
+    .chatbot-icon-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Chatbot Window */
+    .chatbot-window {
+        position: fixed;
+        bottom: 90px;
         right: 20px;
         width: 380px;
         max-width: calc(100vw - 40px);
@@ -82,6 +119,18 @@
         flex-direction: column;
         z-index: 1000;
         max-height: 600px;
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
 
     .chatbot-header {
@@ -92,7 +141,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        cursor: pointer;
+        cursor: default;
         font-weight: 600;
     }
 
@@ -241,10 +290,19 @@
     }
 
     @@media (max-width: 768px) {
-        .chatbot-container {
-            width: calc(100vw - 20px);
-            right: 10px;
-            bottom: 10px;
+        .chatbot-icon-btn {
+            width: 56px;
+            height: 56px;
+            font-size: 1.3rem;
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .chatbot-window {
+            width: calc(100vw - 30px);
+            right: 15px;
+            bottom: 85px;
+            max-height: calc(100vh - 120px);
         }
     }
 </style>
@@ -360,4 +418,3 @@
         public DateTime Timestamp { get; set; }
     }
 }
-
