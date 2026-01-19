@@ -34,7 +34,10 @@
 @code {
     private async Task LogoutAsync()
     {
-        await SupabaseService.SignOutAsync();
+        if (SupabaseService != null)
+        {
+            await SupabaseService.SignOutAsync();
+        }
         AuthStateProvider.ResetUser();
         Navigation.NavigateTo("/auth", true);
     }

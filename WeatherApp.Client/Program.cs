@@ -74,6 +74,11 @@ try
     var supabaseUrl = builder.Configuration["Supabase:Url"];
     var supabaseKey = builder.Configuration["Supabase:Key"];
 
+    // Always register SupabaseAuthStateProvider (it handles null SupabaseService gracefully)
+    builder.Services.AddScoped<SupabaseAuthStateProvider>();
+    builder.Services.AddScoped<AuthenticationStateProvider>(sp => 
+        sp.GetRequiredService<SupabaseAuthStateProvider>());
+
     if (!string.IsNullOrEmpty(supabaseUrl) && !string.IsNullOrEmpty(supabaseKey))
     {
         builder.Services.AddScoped<SupabaseClient>(provider => 
@@ -83,15 +88,12 @@ try
             }));
         
         builder.Services.AddScoped<SupabaseService>();
-        builder.Services.AddScoped<SupabaseAuthStateProvider>();
-        builder.Services.AddScoped<AuthenticationStateProvider>(sp => 
-            sp.GetRequiredService<SupabaseAuthStateProvider>());
     }
     else
     {
-        Console.WriteLine("Warning: Supabase configuration not found - using default authentication");
-        // Always register an AuthenticationStateProvider since CascadingAuthenticationState requires it
-        builder.Services.AddScoped<AuthenticationStateProvider, DefaultAuthStateProvider>();
+        Console.WriteLine("Warning: Supabase configuration not found - authentication will work but user features disabled");
+        // Register SupabaseService with null client - it will handle null gracefully
+        builder.Services.AddScoped<SupabaseService>(provider => new SupabaseService(null));
     }
 
     await builder.Build().RunAsync();

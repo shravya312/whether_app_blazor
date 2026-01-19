@@ -55,17 +55,20 @@ namespace WeatherApp.Client.Services
 
     public class SupabaseService
     {
-        private readonly SupabaseClient _supabase;
+        private readonly SupabaseClient? _supabase;
         private User? _cachedUser;
 
-        public SupabaseService(SupabaseClient supabase)
+        public SupabaseService(SupabaseClient? supabase = null)
         {
             _supabase = supabase;
-            _cachedUser = _supabase.Auth.CurrentUser;
+            _cachedUser = _supabase?.Auth.CurrentUser;
         }
 
         public async Task<User?> SignUpAsync(string email, string password, Dictionary<string, object>? metadata = null)
         {
+            if (_supabase == null)
+                throw new InvalidOperationException("Supabase is not configured. Please configure Supabase settings.");
+            
             try
             {
                 var session = await _supabase.Auth.SignUp(email, password, new SignUpOptions
@@ -154,6 +157,9 @@ namespace WeatherApp.Client.Services
 
         public async Task<User?> SignInAsync(string email, string password)
         {
+            if (_supabase == null)
+                throw new InvalidOperationException("Supabase is not configured. Please configure Supabase settings.");
+            
             try
             {
                 var session = await _supabase.Auth.SignIn(email, password);
@@ -168,6 +174,8 @@ namespace WeatherApp.Client.Services
 
         public async Task SignOutAsync()
         {
+            if (_supabase == null) return;
+            
             try
             {
                 await _supabase.Auth.SignOut();
@@ -181,11 +189,13 @@ namespace WeatherApp.Client.Services
 
         public User? GetCurrentUser()
         {
-            return _supabase.Auth.CurrentUser ?? _cachedUser;
+            return _supabase?.Auth.CurrentUser ?? _cachedUser;
         }
 
         public async Task<User?> GetUserAsync()
         {
+            if (_supabase == null) return _cachedUser;
+            
             try
             {
                 var session = _supabase.Auth.CurrentSession;

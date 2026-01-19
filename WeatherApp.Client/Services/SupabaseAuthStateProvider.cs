@@ -6,17 +6,23 @@ namespace WeatherApp.Client.Services
 {
     public class SupabaseAuthStateProvider : AuthenticationStateProvider
     {
-        private readonly SupabaseService _supabaseService;
+        private readonly SupabaseService? _supabaseService;
         private User? _currentUser;
 
-        public SupabaseAuthStateProvider(SupabaseService supabaseService)
+        public SupabaseAuthStateProvider(SupabaseService? supabaseService = null)
         {
             _supabaseService = supabaseService;
-            _currentUser = _supabaseService.GetCurrentUser();
+            _currentUser = _supabaseService?.GetCurrentUser();
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            // If Supabase is not configured, return unauthenticated state
+            if (_supabaseService == null)
+            {
+                return CreateAuthenticationState(null);
+            }
+
             // Ensure we get the latest user state
             _currentUser = _supabaseService.GetCurrentUser();
             
@@ -31,6 +37,8 @@ namespace WeatherApp.Client.Services
 
         public void UpdateUser(User? user)
         {
+            if (_supabaseService == null) return;
+            
             _currentUser = user;
             NotifyAuthenticationStateChanged(
                 Task.FromResult(CreateAuthenticationState(user)));
@@ -38,6 +46,8 @@ namespace WeatherApp.Client.Services
 
         public void ResetUser()
         {
+            if (_supabaseService == null) return;
+            
             _currentUser = null;
             NotifyAuthenticationStateChanged(
                 Task.FromResult(CreateAuthenticationState(null)));
