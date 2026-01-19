@@ -15,11 +15,4 @@
     <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Ensure appsettings.json is included in publish output for Blazor WebAssembly -->
-    <Content Include="wwwroot\appsettings.json">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>
