@@ -210,7 +210,11 @@
             {
                 try
                 {
-                    var user = await SupabaseService.SignUpAsync(formModel.Email, formModel.Password);
+                    // Get the current base URL for email confirmation redirect
+                    var baseUri = Navigation.ToAbsoluteUri(Navigation.BaseUri);
+                    var redirectUrl = $"{baseUri.Scheme}://{baseUri.Authority}/auth/callback";
+                    
+                    var user = await SupabaseService.SignUpAsync(formModel.Email, formModel.Password, null, redirectUrl);
                     if (user == null)
                     {
                         errorMessage = "Registration failed. Please try again.";

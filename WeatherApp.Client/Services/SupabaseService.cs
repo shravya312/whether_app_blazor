@@ -64,7 +64,7 @@ namespace WeatherApp.Client.Services
             _cachedUser = _supabase?.Auth.CurrentUser;
         }
 
-        public async Task<User?> SignUpAsync(string email, string password, Dictionary<string, object>? metadata = null)
+        public async Task<User?> SignUpAsync(string email, string password, Dictionary<string, object>? metadata = null, string? redirectTo = null)
         {
             if (_supabase == null)
                 throw new InvalidOperationException("Supabase is not configured. Please configure Supabase settings.");
@@ -73,7 +73,8 @@ namespace WeatherApp.Client.Services
             {
                 var session = await _supabase.Auth.SignUp(email, password, new SignUpOptions
                 {
-                    Data = metadata
+                    Data = metadata,
+                    RedirectTo = redirectTo // Set redirect URL for email confirmation
                 });
                 
                 if (session?.User != null)

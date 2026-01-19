@@ -24,6 +24,14 @@ try
         BaseAddress = new Uri(apiBaseUrl) 
     });
 
+    // Configure Client Base URL for Supabase redirect URLs
+    // Default to deployed client URL (can be overridden via environment variable)
+    var clientBaseUrl = builder.Configuration["ClientBaseUrl"] ?? "https://weather-app-client.onrender.com";
+    Console.WriteLine($"Client Base URL: {clientBaseUrl}");
+    
+    // Store client base URL in configuration for use in services
+    builder.Configuration["ClientBaseUrl"] = clientBaseUrl;
+
     // Add API Services
     builder.Services.AddScoped<WeatherApiService>();
     builder.Services.AddScoped<PopularCitiesApiService>();
