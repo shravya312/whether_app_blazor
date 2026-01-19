@@ -80,10 +80,13 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'else' >> /start.sh && \
     echo '    echo "Warning: Supabase__Key not set"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
+    echo '# Export variables so Python can access them' >> /start.sh && \
+    echo 'export ApiBaseUrl="$API_URL"' >> /start.sh && \
+    echo 'export Supabase__Url="$SUPABASE_URL"' >> /start.sh && \
+    echo 'export Supabase__Key="$SUPABASE_KEY"' >> /start.sh && \
     echo '# Create appsettings.json using Python for proper JSON handling' >> /start.sh && \
-    echo 'python3 -c "import json; import os; config = {\"ApiBaseUrl\": os.environ.get(\"ApiBaseUrl\", \"http://localhost:5009\"), \"Supabase\": {\"Url\": os.environ.get(\"Supabase__Url\", \"\"), \"Key\": os.environ.get(\"Supabase__Key\", \"\")}}; open(\"/usr/share/nginx/html/appsettings.json\", \"w\").write(json.dumps(config, indent=2))" 2>/dev/null || {' >> /start.sh && \
-    echo '    # Fallback: use printf if Python not available' >> /start.sh && \
-    echo '    echo "Python not available, using printf fallback..."' >> /start.sh && \
+    echo 'python3 -c "import json; import os; config = {\"ApiBaseUrl\": os.environ.get(\"ApiBaseUrl\", \"http://localhost:5009\"), \"Supabase\": {\"Url\": os.environ.get(\"Supabase__Url\", \"\"), \"Key\": os.environ.get(\"Supabase__Key\", \"\")}}; open(\"/usr/share/nginx/html/appsettings.json\", \"w\").write(json.dumps(config, indent=2)); print(\"Created appsettings.json with Python\")" 2>&1 || {' >> /start.sh && \
+    echo '    echo "Python script failed, using printf fallback..."' >> /start.sh && \
     echo '    printf "{\\n  \\\"ApiBaseUrl\\\": \\\"%s\\\",\\n  \\\"Supabase\\\": {\\n    \\\"Url\\\": \\\"%s\\\",\\n    \\\"Key\\\": \\\"%s\\\"\\n  }\\n}" "$API_URL" "$SUPABASE_URL" "$SUPABASE_KEY" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo '}' >> /start.sh && \
     echo 'echo "Created appsettings.json"' >> /start.sh && \
