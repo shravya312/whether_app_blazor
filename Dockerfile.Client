@@ -82,9 +82,12 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'api_url = os.environ.get("ApiBaseUrl", "http://localhost:5009")' >> /start.sh && \
     echo 'supabase_url = os.environ.get("Supabase__Url", "")' >> /start.sh && \
     echo 'supabase_key = os.environ.get("Supabase__Key", "")' >> /start.sh && \
-    echo 'print(f"Python reading - ApiBaseUrl: {api_url}")' >> /start.sh && \
-    echo 'print(f"Python reading - Supabase__Url: {supabase_url}")' >> /start.sh && \
-    echo 'print(f"Python reading - Supabase__Key: {supabase_key[:30] if supabase_key else \"(empty)\"}...")' >> /start.sh && \
+    echo 'print("Python reading - ApiBaseUrl:", api_url)' >> /start.sh && \
+    echo 'print("Python reading - Supabase__Url:", supabase_url)' >> /start.sh && \
+    echo 'if supabase_key:' >> /start.sh && \
+    echo '    print("Python reading - Supabase__Key:", supabase_key[:30] + "...")' >> /start.sh && \
+    echo 'else:' >> /start.sh && \
+    echo '    print("Python reading - Supabase__Key: (empty)")' >> /start.sh && \
     echo 'config = {' >> /start.sh && \
     echo '    "ApiBaseUrl": api_url,' >> /start.sh && \
     echo '    "Supabase": {' >> /start.sh && \
@@ -94,7 +97,7 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '}' >> /start.sh && \
     echo 'with open("/usr/share/nginx/html/appsettings.json", "w") as f:' >> /start.sh && \
     echo '    json.dump(config, f, indent=2)' >> /start.sh && \
-    echo 'print("✓ Created appsettings.json with Python")' >> /start.sh && \
+    echo 'print("Created appsettings.json with Python")' >> /start.sh && \
     echo 'PYEOF' >> /start.sh && \
     echo 'if [ $? -ne 0 ]; then' >> /start.sh && \
     echo '    echo "Python script failed, using printf fallback..."' >> /start.sh && \
@@ -103,9 +106,6 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '    SUPABASE_KEY="${Supabase__Key:-}"' >> /start.sh && \
     echo '    printf "{\\n  \\\"ApiBaseUrl\\\": \\\"%s\\\",\\n  \\\"Supabase\\\": {\\n    \\\"Url\\\": \\\"%s\\\",\\n    \\\"Key\\\": \\\"%s\\\"\\n  }\\n}" "$API_URL" "$SUPABASE_URL" "$SUPABASE_KEY" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo 'fi' >> /start.sh && \
-    echo '    echo "Python script failed, using printf fallback..."' >> /start.sh && \
-    echo '    printf "{\\n  \\\"ApiBaseUrl\\\": \\\"%s\\\",\\n  \\\"Supabase\\\": {\\n    \\\"Url\\\": \\\"%s\\\",\\n    \\\"Key\\\": \\\"%s\\\"\\n  }\\n}" "$API_URL" "$SUPABASE_URL" "$SUPABASE_KEY" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
-    echo '}' >> /start.sh && \
     echo 'echo "Created appsettings.json"' >> /start.sh && \
     echo 'echo "Final appsettings.json content:"' >> /start.sh && \
     echo 'cat /usr/share/nginx/html/appsettings.json' >> /start.sh && \
