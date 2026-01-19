@@ -26,12 +26,9 @@ RUN rm -rf ./*
 # Blazor WebAssembly publishes to wwwroot inside the publish directory
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html/
 
-# Ensure appsettings.json exists (create if missing from publish)
-RUN if [ ! -f /usr/share/nginx/html/appsettings.json ]; then \
-        echo '{"ApiBaseUrl":"http://localhost:5009","Supabase":{"Url":"","Key":""}}' > /usr/share/nginx/html/appsettings.json && \
-        echo "Created default appsettings.json"; \
-    fi && \
-    echo "appsettings.json exists: $(ls -la /usr/share/nginx/html/appsettings.json 2>&1 || echo 'NOT FOUND')"
+# Don't create default appsettings.json at build time - we'll create it at runtime with env vars
+# This ensures the runtime-created file is used
+RUN echo "appsettings.json will be created at runtime with environment variables"
 
 # Create nginx configuration (will be regenerated at startup with correct port)
 RUN echo 'server {' > /etc/nginx/conf.d/default.conf && \
