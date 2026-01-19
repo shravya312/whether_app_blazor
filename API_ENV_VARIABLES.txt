@@ -1,0 +1,81 @@
+================================================================================
+API SERVICE ENVIRONMENT VARIABLES FOR RENDER
+================================================================================
+Copy these variables and paste them into Render Dashboard → API Service → Environment Variables
+
+================================================================================
+REQUIRED VARIABLES - Fill in your values:
+================================================================================
+
+ASPNETCORE_ENVIRONMENT=Production
+
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
+
+MongoDB__ConnectionString=mongodb+srv://shravyahjain03:vsbh2323@cluster0.1te4hkj.mongodb.net/WeatherApp?retryWrites=true&w=majority
+
+MongoDB__DatabaseName=WeatherApp
+
+WeatherApi__Key=YOUR_OPENWEATHERMAP_API_KEY_HERE
+(Get from: https://openweathermap.org/api)
+
+Email__SmtpServer=smtp.gmail.com
+
+Email__SmtpPort=587
+
+Email__FromEmail=shravyahjain312@gmail.com
+
+Email__FromPassword=YOUR_GMAIL_APP_PASSWORD_HERE
+(Note: Use Gmail App Password, not your regular password. 
+ Generate at: https://myaccount.google.com/apppasswords)
+
+Email__FromName=Weather App
+
+PushNotifications__VapidPublicKey=YOUR_VAPID_PUBLIC_KEY_HERE
+(Generate VAPID keys using: npm install -g web-push && web-push generate-vapid-keys)
+
+PushNotifications__VapidPrivateKey=YOUR_VAPID_PRIVATE_KEY_HERE
+
+PushNotifications__VapidSubject=mailto:shravyahjain312@gmail.com
+
+RENDER_CLIENT_URL=
+(Leave empty for now. Set this AFTER client service is deployed.
+ Example: https://weather-app-client.onrender.com)
+
+================================================================================
+QUICK COPY-PASTE FORMAT (for Render Dashboard):
+================================================================================
+
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
+MongoDB__ConnectionString=mongodb+srv://shravyahjain03:vsbh2323@cluster0.1te4hkj.mongodb.net/WeatherApp?retryWrites=true&w=majority
+MongoDB__DatabaseName=WeatherApp
+WeatherApi__Key=
+Email__SmtpServer=smtp.gmail.com
+Email__SmtpPort=587
+Email__FromEmail=shravyahjain312@gmail.com
+Email__FromPassword=
+Email__FromName=Weather App
+PushNotifications__VapidPublicKey=
+PushNotifications__VapidPrivateKey=
+PushNotifications__VapidSubject=mailto:shravyahjain312@gmail.com
+RENDER_CLIENT_URL=
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+1. Use double underscores (__) for nested config keys (e.g., MongoDB__ConnectionString)
+2. $PORT is automatically set by Render - don't change it
+3. Replace all YOUR_* placeholders with your actual values
+4. RENDER_CLIENT_URL should be set AFTER client service is deployed
+5. Restart the API service after adding all environment variables
+
+================================================================================
+STEP-BY-STEP:
+================================================================================
+1. Go to Render Dashboard → Your API Service → Environment
+2. Click "+ Add Environment Variable" for each variable above
+3. Copy the variable name and value from the Quick Copy-Paste section
+4. Fill in the values marked with YOUR_*
+5. Leave RENDER_CLIENT_URL empty for now
+6. Save and deploy
+

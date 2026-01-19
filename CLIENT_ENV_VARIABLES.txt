@@ -1,0 +1,39 @@
+# Client Service Environment Variables for Render
+
+# ============================================
+# REQUIRED ENVIRONMENT VARIABLES
+# ============================================
+
+# API Base URL - Your deployed API service URL
+# Example: https://weather-app-api.onrender.com
+# IMPORTANT: Replace with your actual API URL from Render
+ApiBaseUrl=https://your-api-service-name.onrender.com
+
+# Supabase Project URL
+# Get this from: https://supabase.com/dashboard → Your Project → Settings → API
+# Example: https://wdzfgezvxydmmcyybnet.supabase.co
+Supabase__Url=https://wdzfgezvxydmmcyybnet.supabase.co
+
+# Supabase Anon Key (Public Key)
+# Get this from: https://supabase.com/dashboard → Your Project → Settings → API → Project API keys → anon public
+# Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Supabase__Key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U
+
+# ============================================
+# NOTES
+# ============================================
+# 1. ApiBaseUrl: This should be your API service URL from Render
+#    - Find it in: Render Dashboard → Your API Service → URL
+#    - Format: https://your-api-service-name.onrender.com
+#    - Do NOT include trailing slash
+#
+# 2. Supabase__Url: Your Supabase project URL
+#    - Already configured above with your project URL
+#
+# 3. Supabase__Key: Your Supabase anon/public key
+#    - Already configured above with your key
+#
+# 4. In Render, use double underscores (__) for nested config:
+#    - Supabase__Url (not Supabase:Url)
+#    - Supabase__Key (not Supabase:Key)
+

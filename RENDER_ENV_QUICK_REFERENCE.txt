@@ -1,0 +1,47 @@
+================================================================================
+RENDER ENVIRONMENT VARIABLES - QUICK REFERENCE
+================================================================================
+
+API SERVICE (Backend) - Add these in Render Dashboard:
+------------------------------------------------------
+
+ASPNETCORE_ENVIRONMENT = Production
+ASPNETCORE_URLS = http://0.0.0.0:$PORT
+MongoDB__ConnectionString = YOUR_MONGODB_CONNECTION_STRING
+MongoDB__DatabaseName = WeatherApp
+WeatherApi__Key = YOUR_OPENWEATHERMAP_API_KEY
+Email__SmtpServer = smtp.gmail.com
+Email__SmtpPort = 587
+Email__FromEmail = YOUR_EMAIL@gmail.com
+Email__FromPassword = YOUR_GMAIL_APP_PASSWORD
+Email__FromName = Weather App
+PushNotifications__VapidPublicKey = YOUR_VAPID_PUBLIC_KEY
+PushNotifications__VapidPrivateKey = YOUR_VAPID_PRIVATE_KEY
+PushNotifications__VapidSubject = mailto:YOUR_EMAIL@gmail.com
+RENDER_CLIENT_URL = https://weather-app-client.onrender.com (SET AFTER CLIENT DEPLOYED)
+
+
+CLIENT SERVICE (Frontend) - Add these in Render Dashboard:
+----------------------------------------------------------
+
+ASPNETCORE_ENVIRONMENT = Production
+ASPNETCORE_URLS = http://0.0.0.0:$PORT
+ApiBaseUrl = https://weather-app-api.onrender.com (SET AFTER API DEPLOYED)
+Supabase__Url = https://YOUR_PROJECT.supabase.co
+Supabase__Key = YOUR_SUPABASE_ANON_KEY
+
+
+DEPLOYMENT ORDER:
+-----------------
+1. Deploy API Service (without RENDER_CLIENT_URL)
+2. Deploy Client Service (with ApiBaseUrl pointing to API)
+3. Update API Service: Add RENDER_CLIENT_URL pointing to Client
+
+
+IMPORTANT NOTES:
+----------------
+- Use double underscores (__) for nested config keys
+- $PORT is automatically set by Render
+- Replace all YOUR_* placeholders with actual values
+- Restart services after adding environment variables
+

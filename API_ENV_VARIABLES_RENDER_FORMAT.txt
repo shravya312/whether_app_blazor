@@ -1,0 +1,15 @@
+ASPNETCORE_ENVIRONMENT=Production
+ASPNETCORE_URLS=http://0.0.0.0:$PORT
+MongoDB__ConnectionString=mongodb+srv://shravyahjain03:vsbh2323@cluster0.1te4hkj.mongodb.net/WeatherApp?retryWrites=true&w=majority
+MongoDB__DatabaseName=WeatherApp
+WeatherApi__Key=
+Email__SmtpServer=smtp.gmail.com
+Email__SmtpPort=587
+Email__FromEmail=shravyahjain312@gmail.com
+Email__FromPassword=
+Email__FromName=Weather App
+PushNotifications__VapidPublicKey=
+PushNotifications__VapidPrivateKey=
+PushNotifications__VapidSubject=mailto:shravyahjain312@gmail.com
+RENDER_CLIENT_URL=
+
