@@ -42,17 +42,35 @@ RUN echo 'server {' > /etc/nginx/conf.d/default.conf && \
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'PORT=${PORT:-8080}' >> /start.sh && \
     echo '' >> /start.sh && \
+    echo '# Debug: Show available environment variables' >> /start.sh && \
+    echo 'echo "Environment variables:"' >> /start.sh && \
+    echo 'echo "ApiBaseUrl=$ApiBaseUrl"' >> /start.sh && \
+    echo 'echo "Supabase__Url=$Supabase__Url"' >> /start.sh && \
+    echo 'echo "Supabase__Key=${Supabase__Key:0:20}..."' >> /start.sh && \
+    echo '' >> /start.sh && \
     echo '# Inject environment variables into appsettings.json' >> /start.sh && \
     echo 'if [ -f /usr/share/nginx/html/appsettings.json ]; then' >> /start.sh && \
+    echo '    # Update ApiBaseUrl' >> /start.sh && \
     echo '    if [ -n "$ApiBaseUrl" ]; then' >> /start.sh && \
     echo '        sed -i "s|\"ApiBaseUrl\": \".*\"|\"ApiBaseUrl\": \"$ApiBaseUrl\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        echo "Updated ApiBaseUrl to: $ApiBaseUrl"' >> /start.sh && \
     echo '    fi' >> /start.sh && \
+    echo '    # Update Supabase Url (nested in Supabase object)' >> /start.sh && \
     echo '    if [ -n "$Supabase__Url" ]; then' >> /start.sh && \
-    echo '        sed -i "s|\"Url\": \".*\"|\"Url\": \"$Supabase__Url\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        sed -i "s|\"Url\": \"[^\"]*\"|\"Url\": \"$Supabase__Url\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        echo "Updated Supabase Url to: $Supabase__Url"' >> /start.sh && \
+    echo '    else' >> /start.sh && \
+    echo '        echo "Warning: Supabase__Url not set"' >> /start.sh && \
     echo '    fi' >> /start.sh && \
+    echo '    # Update Supabase Key (nested in Supabase object)' >> /start.sh && \
     echo '    if [ -n "$Supabase__Key" ]; then' >> /start.sh && \
-    echo '        sed -i "s|\"Key\": \".*\"|\"Key\": \"$Supabase__Key\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        sed -i "s|\"Key\": \"[^\"]*\"|\"Key\": \"$Supabase__Key\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        echo "Updated Supabase Key"' >> /start.sh && \
+    echo '    else' >> /start.sh && \
+    echo '        echo "Warning: Supabase__Key not set"' >> /start.sh && \
     echo '    fi' >> /start.sh && \
+    echo 'else' >> /start.sh && \
+    echo '    echo "Warning: appsettings.json not found!"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
     echo '' >> /start.sh && \
     echo '# Configure nginx with dynamic port' >> /start.sh && \
