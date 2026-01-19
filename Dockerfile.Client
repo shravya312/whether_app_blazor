@@ -22,7 +22,7 @@ RUN rm -rf ./*
 
 # Copy published Blazor WebAssembly files
 # Blazor WebAssembly publishes to wwwroot inside the publish directory
-COPY --from=publish /app/publish/wwwroot /usr/share/nginx/html/
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html/
 
 # Create nginx configuration template
 RUN echo 'server { \
