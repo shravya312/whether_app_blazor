@@ -31,13 +31,43 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <!-- Configuration injector - must load before Blazor -->
+    <script>
+        // Inject environment variables from Render into window object
+        window.APP_CONFIG = {
+            ApiBaseUrl: '{{ApiBaseUrl}}',
+            Supabase: {
+                Url: '{{Supabase__Url}}',
+                Key: '{{Supabase__Key}}'
+            }
+        };
+    </script>
+    <script src="js/config-injector.js"></script>
     <script src="js/geolocation.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/email-queue.js"></script>
     <script src="js/background-sync.js"></script>
     <script src="js/push-notification.js?v=2"></script>
-    <script src="sw.js"></script>
+    <script src="sw.js?v=4"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // Force clear old service workers and caches on load
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                registrations.forEach(function(registration) {
+                    registration.unregister();
+                });
+            });
+        }
+        // Clear old caches
+        caches.keys().then(function(names) {
+            names.forEach(function(name) {
+                if (name !== 'weather-app-v3') {
+                    caches.delete(name);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -82,6 +82,8 @@ appsettings.json
 appsettings.Development.json
 appsettings.Production.json
 *.secrets.json
+# Allow appsettings.json in wwwroot for Blazor WebAssembly (needed for deployment)
+!WeatherApp.Client/wwwroot/appsettings.json
 
 ## Environment Variables
 .env

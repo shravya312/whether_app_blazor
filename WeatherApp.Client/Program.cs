@@ -15,7 +15,8 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 try
 {
     // Configure HttpClient to point to the API
-    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5009";
+    // Default to deployed API URL instead of localhost
+    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://weather-app-api-likx.onrender.com";
     Console.WriteLine($"API Base URL: {apiBaseUrl}");
     
     builder.Services.AddScoped(sp => new HttpClient 
@@ -71,8 +72,9 @@ try
     builder.Services.AddAuthorizationCore();
 
     // Supabase Configuration
-    var supabaseUrl = builder.Configuration["Supabase:Url"];
-    var supabaseKey = builder.Configuration["Supabase:Key"];
+    // Use defaults if not found in appsettings.json (fallback values)
+    var supabaseUrl = builder.Configuration["Supabase:Url"] ?? "https://wdzfgezvxydmmcyybnet.supabase.co";
+    var supabaseKey = builder.Configuration["Supabase:Key"] ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U";
 
     // Always register SupabaseAuthStateProvider (it handles null SupabaseService gracefully)
     builder.Services.AddScoped<SupabaseAuthStateProvider>();

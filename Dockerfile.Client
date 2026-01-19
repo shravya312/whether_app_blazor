@@ -117,6 +117,16 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '    echo "✗ ERROR: appsettings.json not found!"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
     echo '' >> /start.sh && \
+    echo '# Inject environment variables into index.html' >> /start.sh && \
+    echo 'API_URL="${ApiBaseUrl:-https://weather-app-api-likx.onrender.com}"' >> /start.sh && \
+    echo 'SUPABASE_URL="${Supabase__Url:-https://wdzfgezvxydmmcyybnet.supabase.co}"' >> /start.sh && \
+    echo 'SUPABASE_KEY="${Supabase__Key:-}"' >> /start.sh && \
+    echo 'echo "Injecting config into index.html - ApiBaseUrl: $API_URL"' >> /start.sh && \
+    echo 'sed -i "s|{{ApiBaseUrl}}|$API_URL|g" /usr/share/nginx/html/index.html' >> /start.sh && \
+    echo 'sed -i "s|{{Supabase__Url}}|$SUPABASE_URL|g" /usr/share/nginx/html/index.html' >> /start.sh && \
+    echo 'sed -i "s|{{Supabase__Key}}|$SUPABASE_KEY|g" /usr/share/nginx/html/index.html' >> /start.sh && \
+    echo 'echo "Configuration injected into index.html"' >> /start.sh && \
+    echo '' >> /start.sh && \
     echo '# Configure nginx with dynamic port' >> /start.sh && \
     echo 'sed -i "s/listen 8080;/listen $PORT;/g" /etc/nginx/conf.d/default.conf' >> /start.sh && \
     echo '' >> /start.sh && \
