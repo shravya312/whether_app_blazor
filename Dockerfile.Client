@@ -59,40 +59,23 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'echo "Files in /usr/share/nginx/html:"' >> /start.sh && \
     echo 'ls -la /usr/share/nginx/html/ | head -20' >> /start.sh && \
     echo '' >> /start.sh && \
-    echo '# Inject environment variables into appsettings.json' >> /start.sh && \
-    echo 'if [ -f /usr/share/nginx/html/appsettings.json ]; then' >> /start.sh && \
-    echo '    echo "Found appsettings.json, updating..."' >> /start.sh && \
-    echo '    # Update ApiBaseUrl' >> /start.sh && \
-    echo '    if [ -n "$ApiBaseUrl" ]; then' >> /start.sh && \
-    echo '        sed -i "s|\"ApiBaseUrl\": \".*\"|\"ApiBaseUrl\": \"$ApiBaseUrl\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
-    echo '        echo "Updated ApiBaseUrl to: $ApiBaseUrl"' >> /start.sh && \
-    echo '    fi' >> /start.sh && \
-    echo '    # Update Supabase Url (nested in Supabase object)' >> /start.sh && \
-    echo '    if [ -n "$Supabase__Url" ]; then' >> /start.sh && \
-    echo '        # Escape special characters in URL for sed' >> /start.sh && \
-    echo '        ESCAPED_URL=$(echo "$Supabase__Url" | sed "s|/|\\\\/|g")' >> /start.sh && \
-    echo '        sed -i "s|\"Url\": \"[^\"]*\"|\"Url\": \"$ESCAPED_URL\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
-    echo '        echo "Updated Supabase Url to: $Supabase__Url"' >> /start.sh && \
-    echo '    else' >> /start.sh && \
-    echo '        echo "Warning: Supabase__Url not set - Supabase features will not work"' >> /start.sh && \
-    echo '    fi' >> /start.sh && \
-    echo '    # Update Supabase Key (nested in Supabase object)' >> /start.sh && \
-    echo '    if [ -n "$Supabase__Key" ]; then' >> /start.sh && \
-    echo '        # Escape special characters in Key for sed' >> /start.sh && \
-    echo '        ESCAPED_KEY=$(echo "$Supabase__Key" | sed "s|/|\\\\/|g" | sed "s|\.|\\.|g")' >> /start.sh && \
-    echo '        sed -i "s|\"Key\": \"[^\"]*\"|\"Key\": \"$ESCAPED_KEY\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
-    echo '        echo "Updated Supabase Key"' >> /start.sh && \
-    echo '    else' >> /start.sh && \
-    echo '        echo "Warning: Supabase__Key not set - Supabase features will not work"' >> /start.sh && \
-    echo '    fi' >> /start.sh && \
-    echo '    # Show final appsettings.json for debugging' >> /start.sh && \
-    echo '    echo "Final appsettings.json content:"' >> /start.sh && \
-    echo '    cat /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '# Create/Update appsettings.json with environment variables' >> /start.sh && \
+    echo 'echo "Creating appsettings.json from environment variables..."' >> /start.sh && \
+    echo 'API_URL="${ApiBaseUrl:-http://localhost:5009}"' >> /start.sh && \
+    echo 'SUPABASE_URL="${Supabase__Url:-}"' >> /start.sh && \
+    echo 'SUPABASE_KEY="${Supabase__Key:-}"' >> /start.sh && \
+    echo 'echo "ApiBaseUrl: $API_URL"' >> /start.sh && \
+    echo 'echo "Supabase__Url: $SUPABASE_URL"' >> /start.sh && \
+    echo 'if [ -n "$SUPABASE_KEY" ]; then' >> /start.sh && \
+    echo '    echo "Supabase__Key: ${SUPABASE_KEY:0:20}..."' >> /start.sh && \
     echo 'else' >> /start.sh && \
-    echo '    echo "Warning: appsettings.json not found! Creating default..."' >> /start.sh && \
-    echo '    echo "{\"ApiBaseUrl\":\"${ApiBaseUrl:-http://localhost:5009}\",\"Supabase\":{\"Url\":\"${Supabase__Url:-}\",\"Key\":\"${Supabase__Key:-}\"}}" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
-    echo '    echo "Created appsettings.json with environment variables"' >> /start.sh && \
+    echo '    echo "Warning: Supabase__Key not set"' >> /start.sh && \
     echo 'fi' >> /start.sh && \
+    echo '# Create appsettings.json using printf to avoid variable expansion issues' >> /start.sh && \
+    echo 'printf "{\\n  \\\"ApiBaseUrl\\\": \\\"%s\\\",\\n  \\\"Supabase\\\": {\\n    \\\"Url\\\": \\\"%s\\\",\\n    \\\"Key\\\": \\\"%s\\\"\\n  }\\n}" "$API_URL" "$SUPABASE_URL" "$SUPABASE_KEY" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo 'echo "Created appsettings.json"' >> /start.sh && \
+    echo 'echo "Final appsettings.json content:"' >> /start.sh && \
+    echo 'cat /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo '' >> /start.sh && \
     echo '# Configure nginx with dynamic port' >> /start.sh && \
     echo 'sed -i "s/listen 8080;/listen $PORT;/g" /etc/nginx/conf.d/default.conf' >> /start.sh && \
