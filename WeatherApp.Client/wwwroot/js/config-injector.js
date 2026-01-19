@@ -2,13 +2,32 @@
 (function() {
     'use strict';
     
+    // Helper function to check if a value is a placeholder (actual {{...}} string)
+    // Only treat actual placeholder strings as placeholders, not null/undefined
+    function isPlaceholder(value) {
+        return value && typeof value === 'string' && value.startsWith('{{') && value.endsWith('}}');
+    }
+    
     // Get configuration from window object (set by Dockerfile script via inline script)
-    // Or use default values
+    // Fallback logic:
+    // 1. If placeholder detected ({{ApiBaseUrl}}) → use localhost (local dev)
+    // 2. If null/undefined → use production fallback
+    // 3. Otherwise → use the actual value
+    const apiBaseUrl = window.APP_CONFIG?.ApiBaseUrl;
+    const supabaseUrl = window.APP_CONFIG?.Supabase?.Url;
+    const supabaseKey = window.APP_CONFIG?.Supabase?.Key;
+    
     const config = {
-        ApiBaseUrl: window.APP_CONFIG?.ApiBaseUrl || 'https://weather-app-api-likx.onrender.com',
+        ApiBaseUrl: isPlaceholder(apiBaseUrl) 
+            ? 'http://localhost:5009'  // Placeholder detected = local development
+            : (apiBaseUrl || 'https://weather-app-api-likx.onrender.com'),  // Null/undefined = production fallback
         Supabase: {
-            Url: window.APP_CONFIG?.Supabase?.Url || 'https://wdzfgezvxydmmcyybnet.supabase.co',
-            Key: window.APP_CONFIG?.Supabase?.Key || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U'
+            Url: isPlaceholder(supabaseUrl)
+                ? 'https://wdzfgezvxydmmcyybnet.supabase.co'  // Placeholder = use default
+                : (supabaseUrl || 'https://wdzfgezvxydmmcyybnet.supabase.co'),  // Null/undefined = production fallback
+            Key: isPlaceholder(supabaseKey)
+                ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U'  // Placeholder = use default
+                : (supabaseKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U')  // Null/undefined = production fallback
         }
     };
     

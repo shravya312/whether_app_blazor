@@ -14,9 +14,19 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 try
 {
+    // Helper function to check if a value is a placeholder (actual {{...}} string)
+    // Only treat actual placeholder strings as placeholders, not null/empty values
+    bool IsPlaceholder(string? value) => !string.IsNullOrEmpty(value) && value.StartsWith("{{") && value.EndsWith("}}");
+    
     // Configure HttpClient to point to the API
-    // Default to deployed API URL instead of localhost
-    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://weather-app-api-likx.onrender.com";
+    // Fallback logic:
+    // 1. If placeholder detected ({{ApiBaseUrl}}) → use localhost (local dev)
+    // 2. If null/empty → use production fallback (appsettings.json missing in production)
+    // 3. Otherwise → use the actual value from config
+    var apiBaseUrlConfig = builder.Configuration["ApiBaseUrl"];
+    var apiBaseUrl = IsPlaceholder(apiBaseUrlConfig)
+        ? "http://localhost:5009"  // Placeholder detected = local development
+        : (apiBaseUrlConfig ?? "https://weather-app-api-likx.onrender.com");  // Null/empty = production fallback
     Console.WriteLine($"API Base URL: {apiBaseUrl}");
     
     builder.Services.AddScoped(sp => new HttpClient 
@@ -25,8 +35,11 @@ try
     });
 
     // Configure Client Base URL for Supabase redirect URLs
-    // Default to deployed client URL (can be overridden via environment variable)
-    var clientBaseUrl = builder.Configuration["ClientBaseUrl"] ?? "https://weather-app-client.onrender.com";
+    // Same fallback logic as ApiBaseUrl
+    var clientBaseUrlConfig = builder.Configuration["ClientBaseUrl"];
+    var clientBaseUrl = IsPlaceholder(clientBaseUrlConfig)
+        ? "http://localhost:5249"  // Placeholder detected = local development
+        : (clientBaseUrlConfig ?? "https://weather-app-client.onrender.com");  // Null/empty = production fallback
     Console.WriteLine($"Client Base URL: {clientBaseUrl}");
     
     // Store client base URL in configuration for use in services
@@ -80,9 +93,15 @@ try
     builder.Services.AddAuthorizationCore();
 
     // Supabase Configuration
-    // Use defaults if not found in appsettings.json (fallback values)
-    var supabaseUrl = builder.Configuration["Supabase:Url"] ?? "https://wdzfgezvxydmmcyybnet.supabase.co";
-    var supabaseKey = builder.Configuration["Supabase:Key"] ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U";
+    // Same fallback logic: placeholder → use defaults, null/empty → use production defaults
+    var supabaseUrlConfig = builder.Configuration["Supabase:Url"];
+    var supabaseKeyConfig = builder.Configuration["Supabase:Key"];
+    var supabaseUrl = IsPlaceholder(supabaseUrlConfig)
+        ? "https://wdzfgezvxydmmcyybnet.supabase.co"  // Placeholder = use default
+        : (supabaseUrlConfig ?? "https://wdzfgezvxydmmcyybnet.supabase.co");  // Null/empty = production fallback
+    var supabaseKey = IsPlaceholder(supabaseKeyConfig)
+        ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U"  // Placeholder = use default
+        : (supabaseKeyConfig ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkemZnZXp2eHlkbW1jeXlibmV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTgxODIsImV4cCI6MjA3OTg3NDE4Mn0.951h2te--jh6rGovH1fRIbr_5lyUkMQVxBVppzleD6U");  // Null/empty = production fallback
 
     // Always register SupabaseAuthStateProvider (it handles null SupabaseService gracefully)
     builder.Services.AddScoped<SupabaseAuthStateProvider>();

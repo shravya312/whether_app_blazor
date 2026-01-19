@@ -34,6 +34,7 @@
     <!-- Configuration injector - must load before Blazor -->
     <script>
         // Inject environment variables from Render into window object
+        // Default values for local development (will be replaced by Dockerfile in production)
         window.APP_CONFIG = {
             ApiBaseUrl: '{{ApiBaseUrl}}',
             Supabase: {
