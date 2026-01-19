@@ -27,6 +27,9 @@ try
     var apiBaseUrl = IsPlaceholder(apiBaseUrlConfig)
         ? "http://localhost:5009"  // Placeholder detected = local development
         : (apiBaseUrlConfig ?? "https://weather-app-api-likx.onrender.com");  // Null/empty = production fallback
+    
+    // Ensure no trailing slash for BaseAddress
+    apiBaseUrl = apiBaseUrl.TrimEnd('/');
     Console.WriteLine($"API Base URL: {apiBaseUrl}");
     
     builder.Services.AddScoped(sp => new HttpClient 

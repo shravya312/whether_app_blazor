@@ -48,6 +48,7 @@ namespace WeatherApp.Client.Services
                 };
 
                 Console.WriteLine($"[EmailNotificationService] 📧 Calling API: api/notifications/email/weather-alert");
+                Console.WriteLine($"[EmailNotificationService] 📧 API Base URL: {_httpClient.BaseAddress}");
                 
                 try
                 {
