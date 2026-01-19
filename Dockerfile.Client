@@ -69,18 +69,25 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '    fi' >> /start.sh && \
     echo '    # Update Supabase Url (nested in Supabase object)' >> /start.sh && \
     echo '    if [ -n "$Supabase__Url" ]; then' >> /start.sh && \
-    echo '        sed -i "s|\"Url\": \"[^\"]*\"|\"Url\": \"$Supabase__Url\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        # Escape special characters in URL for sed' >> /start.sh && \
+    echo '        ESCAPED_URL=$(echo "$Supabase__Url" | sed "s|/|\\\\/|g")' >> /start.sh && \
+    echo '        sed -i "s|\"Url\": \"[^\"]*\"|\"Url\": \"$ESCAPED_URL\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo '        echo "Updated Supabase Url to: $Supabase__Url"' >> /start.sh && \
     echo '    else' >> /start.sh && \
-    echo '        echo "Warning: Supabase__Url not set"' >> /start.sh && \
+    echo '        echo "Warning: Supabase__Url not set - Supabase features will not work"' >> /start.sh && \
     echo '    fi' >> /start.sh && \
     echo '    # Update Supabase Key (nested in Supabase object)' >> /start.sh && \
     echo '    if [ -n "$Supabase__Key" ]; then' >> /start.sh && \
-    echo '        sed -i "s|\"Key\": \"[^\"]*\"|\"Key\": \"$Supabase__Key\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
+    echo '        # Escape special characters in Key for sed' >> /start.sh && \
+    echo '        ESCAPED_KEY=$(echo "$Supabase__Key" | sed "s|/|\\\\/|g" | sed "s|\.|\\.|g")' >> /start.sh && \
+    echo '        sed -i "s|\"Key\": \"[^\"]*\"|\"Key\": \"$ESCAPED_KEY\"|g" /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo '        echo "Updated Supabase Key"' >> /start.sh && \
     echo '    else' >> /start.sh && \
-    echo '        echo "Warning: Supabase__Key not set"' >> /start.sh && \
+    echo '        echo "Warning: Supabase__Key not set - Supabase features will not work"' >> /start.sh && \
     echo '    fi' >> /start.sh && \
+    echo '    # Show final appsettings.json for debugging' >> /start.sh && \
+    echo '    echo "Final appsettings.json content:"' >> /start.sh && \
+    echo '    cat /usr/share/nginx/html/appsettings.json' >> /start.sh && \
     echo 'else' >> /start.sh && \
     echo '    echo "Warning: appsettings.json not found! Creating default..."' >> /start.sh && \
     echo '    echo "{\"ApiBaseUrl\":\"${ApiBaseUrl:-http://localhost:5009}\",\"Supabase\":{\"Url\":\"${Supabase__Url:-}\",\"Key\":\"${Supabase__Key:-}\"}}" > /usr/share/nginx/html/appsettings.json' >> /start.sh && \
