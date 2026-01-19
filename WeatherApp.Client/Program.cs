@@ -89,7 +89,9 @@ try
     }
     else
     {
-        Console.WriteLine("Warning: Supabase configuration not found");
+        Console.WriteLine("Warning: Supabase configuration not found - using default authentication");
+        // Always register an AuthenticationStateProvider since CascadingAuthenticationState requires it
+        builder.Services.AddScoped<AuthenticationStateProvider, DefaultAuthStateProvider>();
     }
 
     await builder.Build().RunAsync();
